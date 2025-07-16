@@ -13,16 +13,9 @@
           <ChevronDownIcon class="collapsible-indicator absolute top-0 right-0" />
         </div>
 
-        <Collapsible
-          :is-open="panels.layer"
-          class="flex flex-col gap-1 max-h-[140px] overflow-y-auto mt-2 p-1"
-        >
+        <Collapsible :is-open="panels.layer" class="flex flex-col gap-1 max-h-[140px] overflow-y-auto mt-2 p-1">
           <div v-for="layer in availableLayers" :key="layer.key" class="flex gap-1 justify-between">
-            <Checkbox
-              v-model="layer.visible"
-              @change="toggleLayer(layer as LayerMeta)"
-              class="truncate"
-            >
+            <Checkbox v-model="layer.visible" @change="toggleLayer(layer as LayerMeta)" class="truncate">
               <span class="truncate">{{ layer.label }}</span>
             </Checkbox>
             <div class="flex gap-1">
@@ -30,22 +23,12 @@
               <Button size="sm" variant="danger" @click="deselectLayer(layer.key)">
                 Deselect All
               </Button>
-              <Button
-                squared
-                size="sm"
-                title="Export layer"
-                @click="exportLayer(layer as LayerMeta)"
-              >
+              <Button squared size="sm" title="Export layer" @click="exportLayer(layer as LayerMeta)">
                 <FileExportIcon class="w-5 h-5" />
               </Button>
             </div>
           </div>
-          <input
-            type="file"
-            class="mr-auto mt-1"
-            @change="importLayer"
-            accept=".txt,.json,.geojson"
-          />
+          <input type="file" class="mr-auto mt-1" @change="importLayer" accept=".txt,.json,.geojson" />
         </Collapsible>
       </div>
 
@@ -64,30 +47,17 @@
         </div>
 
         <div class="flex flex-col gap-1 overflow-y-auto px-1 pb-1">
-          <div
-            v-for="polygon of selected"
-            :key="polygon._leaflet_id"
-            class="flex items-center gap-2"
-          >
+          <div v-for="polygon of selected" :key="polygon._leaflet_id" class="flex items-center gap-2">
             <Button size="sm" squared title="Import locations">
               <label class="cursor-pointer">
-                <input
-                  type="file"
-                  accept=".json"
-                  hidden
-                  @change="importLocations($event, polygon as Polygon)"
-                />
+                <input type="file" accept=".json" hidden @change="importLocations($event, polygon as Polygon)" />
                 <FileImportIcon class="w-5 h-5" />
               </label>
             </Button>
-            <span
-              v-if="polygon.feature.properties.code"
-              :class="`flag-icon flag-` + polygon.feature.properties.code.toLowerCase()"
-            ></span>
-            <label
-              class="flex-grow truncate min-h-5 cursor-text"
-              @click="changePolygonName(polygon.feature.properties)"
-            >
+            <span v-if="polygon.feature.properties.code"
+              :class="`flag-icon flag-` + polygon.feature.properties.code.toLowerCase()"></span>
+            <label class="flex-grow truncate min-h-5 cursor-text"
+              @click="changePolygonName(polygon.feature.properties)">
               {{ getPolygonName(polygon.feature.properties) }}
             </label>
             <Spinner v-if="state.started && polygon.isProcessing" />
@@ -95,25 +65,15 @@
             <div class="ml-auto flex items-center gap-1">
               {{ polygon.found.length }}
               <span>/</span>
-              <input
-                type="number"
-                :min="polygon.found ? polygon.found.length : 0"
-                v-model="polygon.nbNeeded"
-              />
+              <input type="number" :min="polygon.found ? polygon.found.length : 0" v-model="polygon.nbNeeded" />
             </div>
 
             <div class="flex gap-1">
               <Clipboard :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
               <ExportToJSON :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
               <ExportToCSV :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
-              <Button
-                size="sm"
-                squared
-                variant="danger"
-                :disabled="!polygon.found.length"
-                title="Delete locations for polygon"
-                @click="clearPolygon(polygon as Polygon)"
-              >
+              <Button size="sm" squared variant="danger" :disabled="!polygon.found.length"
+                title="Delete locations for polygon" @click="clearPolygon(polygon as Polygon)">
                 <TrashBinIcon class="w-5 h-5" />
               </Button>
             </div>
@@ -125,25 +85,15 @@
     <div class="container">
       <div class="flex items-center gap-2 p-1">
         <h2>Export all ({{ totalLocs }})</h2>
-        <Button
-          class="ml-auto"
-          size="sm"
-          title="Change locations cap for all selected"
-          @click="changeLocationsCap"
-          >Edit cap for all
+        <Button class="ml-auto" size="sm" title="Change locations cap for all selected" @click="changeLocationsCap">Edit
+          cap for all
         </Button>
         <div class="flex gap-1">
           <Clipboard :data="selected as Polygon[]" :disabled="!totalLocs" />
           <ExportToJSON :data="selected as Polygon[]" :disabled="!totalLocs" />
           <ExportToCSV :data="selected as Polygon[]" :disabled="!totalLocs" />
-          <Button
-            size="sm"
-            squared
-            variant="danger"
-            :disabled="!totalLocs"
-            title="Delete all locations"
-            @click="clearAllLocations"
-          >
+          <Button size="sm" squared variant="danger" :disabled="!totalLocs" title="Delete all locations"
+            @click="clearAllLocations">
             <TrashBinIcon class="w-5 h-5" />
           </Button>
         </div>
@@ -151,19 +101,21 @@
     </div>
   </div>
 
-  <div
-    class="absolute top-1 right-1 w-88 max-h-[calc(100vh-8px)] overfslow-hidden flex flex-col gap-1"
-  >
+  <div class="absolute top-1 right-1 w-88 max-h-[calc(100vh-8px)] overfslow-hidden flex flex-col gap-1">
     <div class="flex flex-col gap-1 flex-1 min-h-0">
       <div v-if="!state.started" class="container flex flex-col">
-        <div
-          class="relative cursor-pointer"
-          @click="panels.generatorSettings = !panels.generatorSettings"
-        >
+        <div class="relative cursor-pointer" @click="panels.generatorSettings = !panels.generatorSettings">
           <h2>Generator settings</h2>
           <ChevronDownIcon class="collapsible-indicator absolute top-0 right-0" />
         </div>
-
+        <div class="flex items-center justify-between">
+          Provider :
+          <select v-model="settings.provider">
+            <option value="google">Google</option>
+            <option value="tencent">Tencent</option>
+            <option value="kakao">Kakao</option>
+          </select>
+        </div>
         <Collapsible :is-open="panels.generatorSettings" class="mt-1 p-1 pr-2">
           <div class="flex justify-between">
             Generators :
@@ -185,10 +137,8 @@
             Only check one country/polygon at a time.
           </Checkbox>
 
-          <Checkbox
-            v-model="settings.onlyCheckBlueLines"
-            title="Significatly speeds up generation in areas with sparse coverage density. May negatively affect speeds if generating locations exclusively in areas with very dense coverage. (Official coverage only)"
-          >
+          <Checkbox v-model="settings.onlyCheckBlueLines"
+            title="Significatly speeds up generation in areas with sparse coverage density. May negatively affect speeds if generating locations exclusively in areas with very dense coverage. (Official coverage only)">
             Only check in areas with blue lines
           </Checkbox>
 
@@ -202,26 +152,19 @@
       </div>
 
       <div v-if="!state.started" class="container flex flex-col flex-1 min-h-0">
-        <div
-          class="cursor-pointer relative"
-          @click="panels.coverageSettings = !panels.coverageSettings"
-        >
+        <div class="cursor-pointer relative" @click="panels.coverageSettings = !panels.coverageSettings">
           <h2>Coverage settings</h2>
           <ChevronDownIcon class="collapsible-indicator absolute top-0 right-0" />
         </div>
         <div class="flex-1 min-h-0 overflow-y-auto">
           <Collapsible :is-open="panels.coverageSettings" class="p-1">
-            <Checkbox v-if="!settings.rejectOfficial" v-model="settings.rejectUnofficial"
-              >Reject unofficial</Checkbox
-            >
+            <Checkbox v-if="!settings.rejectOfficial" v-model="settings.rejectUnofficial">Reject unofficial</Checkbox>
 
             <Checkbox v-model="settings.rejectOfficial">Find unofficial coverage</Checkbox>
-            <Checkbox v-if="settings.rejectOfficial" v-model="settings.findPhotospheres"
-              >Find photospheres only</Checkbox
-            >
-            <Checkbox v-if="settings.rejectOfficial" v-model="settings.findDrones"
-              >Find drone photospheres only</Checkbox
-            >
+            <Checkbox v-if="settings.rejectOfficial" v-model="settings.findPhotospheres">Find photospheres only
+            </Checkbox>
+            <Checkbox v-if="settings.rejectOfficial" v-model="settings.findDrones">Find drone photospheres only
+            </Checkbox>
 
             <div v-if="settings.rejectUnofficial && !settings.rejectOfficial">
               <Checkbox v-model="settings.rejectDateless">Reject locations without date</Checkbox>
@@ -232,10 +175,8 @@
 
               <Checkbox v-model="settings.rejectDescription">Find trekker coverage</Checkbox>
 
-              <Checkbox
-                v-model="settings.onlyOneInTimeframe"
-                title="Only allow locations that don't have other nearby coverage in timeframe."
-              >
+              <Checkbox v-model="settings.onlyOneInTimeframe"
+                title="Only allow locations that don't have other nearby coverage in timeframe.">
                 Only one panorama on location
               </Checkbox>
 
@@ -313,24 +254,16 @@
 
             <Checkbox v-model="settings.checkAllDates">Check all dates</Checkbox>
 
-            <Checkbox
-              v-if="settings.rejectUnofficial && !settings.rejectOfficial"
-              v-model="settings.randomInTimeline"
-            >
+            <Checkbox v-if="settings.rejectUnofficial && !settings.rejectOfficial" v-model="settings.randomInTimeline">
               Choose random date in time range
             </Checkbox>
           </Collapsible>
         </div>
       </div>
 
-      <div
-        v-if="!state.started && settings.rejectUnofficial && !settings.rejectOfficial"
-        class="container settings flex flex-col flex-1 min-h-0"
-      >
-        <div
-          class="cursor-pointer relative"
-          @click="panels.mapMakingSettings = !panels.mapMakingSettings"
-        >
+      <div v-if="!state.started && settings.rejectUnofficial && !settings.rejectOfficial"
+        class="container settings flex flex-col flex-1 min-h-0">
+        <div class="cursor-pointer relative" @click="panels.mapMakingSettings = !panels.mapMakingSettings">
           <h2>Map making settings</h2>
           <ChevronDownIcon class="collapsible-indicator absolute top-0 right-0" />
         </div>
@@ -338,8 +271,7 @@
         <div class="flex-1 min-h-0 overflow-y-auto">
           <Collapsible :is-open="panels.mapMakingSettings" class="p-1">
             <div class="flex items-center gap-1 relative">
-              <Checkbox v-model="settings.searchInDescription.enabled"
-                >Search in panorama description
+              <Checkbox v-model="settings.searchInDescription.enabled">Search in panorama description
               </Checkbox>
               <Tooltip>
                 Description is usually based on your locale.<br />
@@ -353,11 +285,7 @@
                   <option value="include">include</option>
                   <option value="exclude">exclude</option>
                 </select>
-                <input
-                  type="text"
-                  v-model.trim="settings.searchInDescription.searchTerms"
-                  class="w-full"
-                />
+                <input type="text" v-model.trim="settings.searchInDescription.searchTerms" class="w-full" />
               </div>
 
               <div class="flex justify-between items-center gap-2">
@@ -405,14 +333,8 @@
                 <span class="ml-auto">
                   {{ settings.findByTileColor.zoom }}
                 </span>
-                <input
-                  type="range"
-                  v-model.number="settings.findByTileColor.zoom"
-                  min="13"
-                  max="19"
-                  step="1"
-                  title="Tile zoom level"
-                />
+                <input type="range" v-model.number="settings.findByTileColor.zoom" min="13" max="19" step="1"
+                  title="Tile zoom level" />
               </div>
 
               <div class="flex justify-between items-center gap-2">
@@ -423,31 +345,17 @@
                 </select>
               </div>
 
-              <div
-                v-for="(tileColor, index) in settings.findByTileColor.tileColors[
-                  settings.findByTileColor.tileProvider
-                ]"
-                :key="index"
-                :title="tileColor.label"
-                class="flex items-center gap-2"
-              >
+              <div v-for="(tileColor, index) in settings.findByTileColor.tileColors[
+                settings.findByTileColor.tileProvider
+              ]" :key="index" :title="tileColor.label" class="flex items-center gap-2">
                 <Checkbox v-model="tileColor.active" class="hover:brightness-100! truncate">
-                  <span
-                    class="h-4 min-w-8"
-                    :style="{ backgroundColor: 'rgb(' + tileColor.colors[0] + ')' }"
-                  />
+                  <span class="h-4 min-w-8" :style="{ backgroundColor: 'rgb(' + tileColor.colors[0] + ')' }" />
                   <span class="truncate">{{ tileColor.label }}</span>
                 </Checkbox>
                 <div v-if="tileColor.threshold >= 0.01" class="flex items-center gap-2 ml-auto">
                   <span>{{ (tileColor.threshold * 100).toFixed(0) }}%</span>
-                  <input
-                    type="range"
-                    v-model.number="tileColor.threshold"
-                    min="0.01"
-                    max="1"
-                    step="0.01"
-                    title="Color presence threshold"
-                  />
+                  <input type="range" v-model.number="tileColor.threshold" min="0.01" max="1" step="0.01"
+                    title="Color presence threshold" />
                 </div>
               </div>
             </div>
@@ -465,13 +373,8 @@
                     > 2 : intersection
                   </Tooltip>
                 </div>
-                <Slider
-                  v-model="settings.filterByLinksLength.range"
-                  :min="0"
-                  :max="5"
-                  tooltipPosition="bottom"
-                  class="w-32 pr-2"
-                />
+                <Slider v-model="settings.filterByLinksLength.range" :min="0" :max="5" tooltipPosition="bottom"
+                  class="w-32 pr-2" />
               </label>
             </div>
 
@@ -498,13 +401,8 @@
               </label>
               <label class="flex items-center justify-between">
                 Deviation
-                <Slider
-                  v-model="settings.heading.range"
-                  :min="-180"
-                  :max="180"
-                  tooltipPosition="bottom"
-                  class="w-32 pr-2"
-                />
+                <Slider v-model="settings.heading.range" :min="-180" :max="180" tooltipPosition="bottom"
+                  class="w-32 pr-2" />
               </label>
               <small>0° will point directly towards the road.</small>
               <Checkbox v-model="settings.heading.randomInRange">Random in range</Checkbox>
@@ -512,14 +410,8 @@
 
             <div class="flex items-center justify-between">
               <Checkbox v-model="settings.pitch.adjust">Set pitch</Checkbox>
-              <Slider
-                v-if="settings.pitch.adjust"
-                v-model="settings.pitch.range"
-                :min="-90"
-                :max="90"
-                tooltipPosition="bottom"
-                class="w-32 pr-2"
-              />
+              <Slider v-if="settings.pitch.adjust" v-model="settings.pitch.range" :min="-90" :max="90"
+                tooltipPosition="bottom" class="w-32 pr-2" />
             </div>
             <div v-if="settings.pitch.adjust" class="ml-6">
               <small>0° by default. -90° for tarmac, +90° for sky</small>
@@ -528,19 +420,11 @@
 
             <div class="flex items-center justify-between">
               <Checkbox v-model="settings.zoom.adjust">Set zoom</Checkbox>
-              <Slider
-                v-if="settings.zoom.adjust"
-                v-model="settings.zoom.range"
-                :min="0"
-                :max="4"
-                :step="-1"
-                tooltipPosition="bottom"
-                class="w-32 pr-2"
-              />
+              <Slider v-if="settings.zoom.adjust" v-model="settings.zoom.range" :min="0" :max="4" :step="-1"
+                tooltipPosition="bottom" class="w-32 pr-2" />
             </div>
-            <Checkbox v-if="settings.zoom.adjust" v-model="settings.zoom.randomInRange" class="ml-6"
-              >Random in range</Checkbox
-            >
+            <Checkbox v-if="settings.zoom.adjust" v-model="settings.zoom.randomInRange" class="ml-6">Random in range
+            </Checkbox>
           </Collapsible>
         </div>
       </div>
@@ -552,10 +436,7 @@
         </div>
 
         <Collapsible :is-open="panels.marker" class="p-1">
-          <Checkbox
-            v-model="settings.markers.noBlueLine"
-            v-on:change="updateMarkerLayers('noBlueLine')"
-          >
+          <Checkbox v-model="settings.markers.noBlueLine" v-on:change="updateMarkerLayers('noBlueLine')">
             <span class="h-3 w-3 bg-[#E412D2] rounded-full"></span>No blue line
           </Checkbox>
           <Checkbox v-model="settings.markers.newRoad" v-on:change="updateMarkerLayers('newRoad')">
@@ -570,32 +451,19 @@
           <Checkbox v-model="settings.markers.gen1" v-on:change="updateMarkerLayers('gen1')">
             <span class="h-3 w-3 bg-[#24AC20] rounded-full"></span>Gen 1 Update
           </Checkbox>
-          <Checkbox
-            v-model="settings.markers.cluster"
-            v-on:change="updateClusters"
-            title="For lag reduction."
-          >
+          <Checkbox v-model="settings.markers.cluster" v-on:change="updateClusters" title="For lag reduction.">
             Cluster markers
           </Checkbox>
-          <Button
-            :disabled="!totalLocs"
-            size="sm"
-            variant="warning"
+          <Button :disabled="!totalLocs" size="sm" variant="warning"
             class="mt-2 w-full justify-center flex items-center gap-1"
-            title="Clear markers (for performance, this won't erase your generated locations)"
-            @click="clearMarkers"
-          >
+            title="Clear markers (for performance, this won't erase your generated locations)" @click="clearMarkers">
             <MarkerIcon class="w-5 h-5" />Clear
           </Button>
         </Collapsible>
       </div>
 
-      <Button
-        v-if="canBeStarted"
-        @click="handleClickStart"
-        :variant="state.started ? 'danger' : 'primary'"
-        title="Space bar/Enter"
-        >{{ state.started ? 'Pause' : 'Start' }}
+      <Button v-if="canBeStarted" @click="handleClickStart" :variant="state.started ? 'danger' : 'primary'"
+        title="Space bar/Enter">{{ state.started ? 'Pause' : 'Start' }}
       </Button>
     </div>
   </div>
@@ -658,25 +526,26 @@ import {
   searchInDescription,
   getCurrentDate,
   parseDate,
+  extractDateFromPanoId,
   isDate,
   randomInRange,
   distanceBetween,
   readFileAsText,
   getPolygonName,
   changePolygonName,
+  tencentToGcj02
 } from '@/composables/utils.ts'
+import StreetViewProviders from './providers'
 const { currentDate } = getCurrentDate()
 
-const SV = new google.maps.StreetViewService()
-
-watch(
+/*watch(
   () => settings.rejectOfficial,
   (newVal) => {
     if (newVal) {
       settings.rejectUnofficial = false
     }
   },
-)
+)*/
 
 const panels = useStorage('map_generator__panels', {
   layer: true,
@@ -799,7 +668,7 @@ function getPanoramaRequest(
 }
 
 async function getLoc(loc: LatLng, polygon: Polygon) {
-  return SV.getPanorama(getPanoramaRequest(loc, settings.rejectUnofficial), (res, status) => {
+  return StreetViewProviders.getPanorama(settings.provider, getPanoramaRequest(loc, settings.rejectUnofficial), (res, status) => {
     if (status != google.maps.StreetViewStatus.OK || !res || !res.location) return false
 
     if (settings.searchInDescription.enabled) {
@@ -835,7 +704,7 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
     }
 
     if (settings.rejectOfficial) {
-      if (isOfficial(res.location.pano)) return false
+      if (isOfficial(res.location.pano, settings.provider)) return false
       if (settings.findPhotospheres && !isPhotosphere(res)) return false
       if (settings.findDrones && !isDrone(res)) return false
     }
@@ -874,7 +743,7 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       const toDate = Date.parse(settings.toDate)
       let dateWithin = false
       for (const loc of res.time) {
-        if (settings.rejectUnofficial && !isOfficial(loc.pano)) continue
+        if (settings.rejectUnofficial && !isOfficial(loc.pano, settings.provider)) continue
 
         const date = Object.values(loc).find((val) => val instanceof Date)
         const iDate = parseDate(date)
@@ -905,7 +774,7 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
 
 async function isPanoGood(pano: google.maps.StreetViewPanoramaData) {
   if (settings.rejectUnofficial && !settings.rejectOfficial) {
-    if (!pano.location || !isOfficial(pano.location.pano)) return false
+    if (!pano.location || !isOfficial(pano.location.pano, settings.provider)) return false
     // Reject trekkers
     if (
       settings.rejectNoDescription &&
@@ -968,7 +837,7 @@ async function isPanoGood(pano: google.maps.StreetViewPanoramaData) {
   if (settings.onlyOneInTimeframe) {
     if (!pano.time?.length) return false
     for (const loc of pano.time) {
-      if (settings.rejectUnofficial && !isOfficial(loc.pano)) continue
+      if (settings.rejectUnofficial && !isOfficial(loc.pano, settings.provider)) continue
       if (loc.pano == pano.location?.pano) continue
       const date = Object.values(loc).find((val) => val instanceof Date)
       const iDate = parseDate(date)
@@ -987,7 +856,7 @@ async function isPanoGood(pano: google.maps.StreetViewPanoramaData) {
 
     let dateWithin = false
     for (let i = 0; i < pano.time.length; i++) {
-      if (settings.rejectUnofficial && !isOfficial(pano.time[i].pano)) continue
+      if (settings.rejectUnofficial && !isOfficial(pano.time[i].pano, settings.provider)) continue
 
       const timeframeDate = Object.values(pano.time[i]).find((val) => isDate(val))
       const iDate = parseDate(timeframeDate)
@@ -1006,7 +875,7 @@ async function isPanoGood(pano: google.maps.StreetViewPanoramaData) {
 
     if (settings.checkAllDates) {
       for (let i = 0; i < pano.time.length; i++) {
-        if (settings.rejectUnofficial && !isOfficial(pano.time[i].pano)) continue
+        if (settings.rejectUnofficial && !isOfficial(pano.time[i].pano, settings.provider)) continue
 
         const timeframeDate = Object.values(pano.time[i]).find((val) => isDate(val))
         const iDateMonth = timeframeDate.getMonth() + 1
@@ -1056,7 +925,7 @@ function getPanoDeep(id: string, polygon: Polygon, depth: number) {
   if (polygon.checkedPanos.has(id)) return
   else polygon.checkedPanos.add(id)
 
-  SV.getPanorama({ pano: id }, async (pano, status) => {
+  StreetViewProviders.getPanorama(settings.provider, { pano: id }, async (pano, status) => {
     if (status == google.maps.StreetViewStatus.UNKNOWN_ERROR) {
       polygon.checkedPanos.delete(id)
       return getPanoDeep(id, polygon, depth)
@@ -1073,7 +942,7 @@ function getPanoDeep(id: string, polygon: Polygon, depth: number) {
       const toDate = Date.parse(settings.toDate)
 
       for (const loc of pano.time) {
-        if (settings.rejectUnofficial && !isOfficial(loc.pano)) continue
+        if (settings.rejectUnofficial && !isOfficial(loc.pano, settings.provider)) continue
 
         const date = Object.values(loc).find((val) => val instanceof Date)
         const iDate = parseDate(date)
@@ -1157,7 +1026,7 @@ function addLoc(pano: google.maps.StreetViewPanoramaData, polygon: Polygon) {
 
   // Remove ari
   const time = settings.rejectUnofficial
-    ? pano.time.filter((entry) => isOfficial(entry.pano))
+    ? pano.time.filter((entry) => isOfficial(entry.pano, settings.provider))
     : pano.time
   const previousPano = time[time.length - 2]?.pano
 
@@ -1167,7 +1036,8 @@ function addLoc(pano: google.maps.StreetViewPanoramaData, polygon: Polygon) {
       addLocation(location, polygon, hasBlueLine ? icons.newLoc : icons.noBlueLine)
     })
   } else {
-    SV.getPanorama({ pano: previousPano }, (previousPano) => {
+    StreetViewProviders.getPanorama(settings.provider, { pano: previousPano }, (previousPano) => {
+      if (settings.provider != 'google') return addLocation(location, polygon, icons.gen4)
       if (previousPano.tiles.worldSize.height === 1664) {
         // Gen 1
         return addLocation(location, polygon, icons.gen1)
@@ -1218,10 +1088,26 @@ function addLocation(
     if (addMarker) {
       const marker = L.marker([location.lat, location.lng], { icon: iconType, forceZIndex: zIndex })
         .on('click', () => {
-          window.open(
-            `https://www.google.com/maps/@?api=1&map_action=pano&pano=${location.panoId}${location.heading ? '&heading=' + location.heading : ''}${location.pitch ? '&pitch=' + location.pitch : ''}${location.zoom ? '&fov=' + String(180 / 2 ** location.zoom) : ''}`,
-            '_blank',
-          )
+          const heading = location.heading ?? 0
+          const pitch = location.pitch ?? 0
+          const zoom = location.zoom ?? 0
+          let url = ''
+
+          switch (settings.provider) {
+            case 'google':
+              url = `https://www.google.com/maps/@?api=1&map_action=pano&pano=${location.panoId}&heading=${heading}&pitch=${pitch}&fov=${180 / 2 ** zoom}`
+              break
+            case 'tencent':
+              url = `https://qq-map.netlify.app/#base=roadmap&zoom=18&center=${location.lat},${location.lng}&pano=${location.panoId}&heading=${heading}&pitch=${pitch}&svz=0`
+              break
+            case 'kakao':
+              url = `https://map.kakao.com/?map_type=TYPE_MAP&map_attribute=ROADVIEW&panoid=${location.panoId}&pan=${heading}`
+              break
+            default:
+              url = `https://www.google.com/maps/@?api=1&map_action=pano&pano=${location.panoId}&heading=${heading}&pitch=${pitch}&fov=${180 / 2 ** zoom}`
+          }
+
+          window.open(url, '_blank')
         })
         .setZIndexOffset(zIndex)
         .addTo(markerLayer)
@@ -1315,25 +1201,25 @@ window.onbeforeunload = function () {
   }
 }
 
-// window.type = !0
-// not sure if really needed
-;(function (global: typeof L.Marker | undefined) {
-  const MarkerMixin = {
-    _updateZIndex: function (offset: number) {
-      // @ts-expect-error error
-      this._icon.style.zIndex = this.options.forceZIndex
-        ? // @ts-expect-error error
+  // window.type = !0
+  // not sure if really needed
+  ; (function (global: typeof L.Marker | undefined) {
+    const MarkerMixin = {
+      _updateZIndex: function (offset: number) {
+        // @ts-expect-error error
+        this._icon.style.zIndex = this.options.forceZIndex
+          ? // @ts-expect-error error
           this.options.forceZIndex + (this.options.zIndexOffset || 0)
-        : // @ts-expect-error error
+          : // @ts-expect-error error
           this._zIndex + offset
-    },
-    setForceZIndex: function (forceZIndex?: number | null) {
-      // @ts-expect-error error
-      this.options.forceZIndex = forceZIndex ? forceZIndex : null
-    },
-  }
-  if (global) global.include(MarkerMixin)
-})(L.Marker)
+      },
+      setForceZIndex: function (forceZIndex?: number | null) {
+        // @ts-expect-error error
+        this.options.forceZIndex = forceZIndex ? forceZIndex : null
+      },
+    }
+    if (global) global.include(MarkerMixin)
+  })(L.Marker)
 
 Array.prototype.chunk = function (n) {
   if (!this.length) {
@@ -1345,12 +1231,15 @@ Array.prototype.chunk = function (n) {
 
 <style>
 @import '@vueform/slider/themes/default.css';
+
 :root {
   --slider-connect-bg: var(--color-primary);
 }
+
 .slider-connects {
   background-color: rgba(0, 0, 0, 0.8);
 }
+
 .slider-tooltip {
   background-color: rgb(59, 59, 59);
   border: 1px solid black;
@@ -1378,11 +1267,13 @@ Array.prototype.chunk = function (n) {
 #leaflet-ui {
   z-index: 99;
 }
+
 .leaflet-left .leaflet-control,
 .leaflet-bottom .leaflet-control {
   margin-left: 4px;
   margin-bottom: 4px;
 }
+
 .leaflet-control-layers {
   background-color: rgb(0, 0, 0, 0.6);
   font-size: 10px;

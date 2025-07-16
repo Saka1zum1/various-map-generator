@@ -12,6 +12,8 @@ const defaultSettings = {
   findRegions: false,
   regionRadius: 100,
 
+  provider: 'google',
+
   rejectUnofficial: true,
   rejectOfficial: false,
   findByGeneration: {

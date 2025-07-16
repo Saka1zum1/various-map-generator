@@ -1,6 +1,15 @@
-export function isOfficial(pano: string) {
-  return pano.length === 22 // Checks if pano ID is 22 characters long. Otherwise, it's an Ari
+export function isOfficial(pano: string, provider: string) {
+  switch (provider) {
+    case 'google':
+      return pano.length === 22  // Checks if pano ID is 22 characters long. Otherwise, it's an Ari
   // return (!/^\xA9 (?:\d+ )?Google$/.test(pano.copyright))
+    case 'tencent':
+      return pano.length === 23
+    case 'kakao':
+      return pano.length === 10
+    default:
+      return false
+  }
 }
 
 export function isPhotosphere(res: google.maps.StreetViewPanoramaData) {
@@ -13,6 +22,14 @@ export function isDrone(res: google.maps.StreetViewPanoramaData) {
 
 export function hasAnyDescription(location: google.maps.StreetViewLocation) {
   return location.description || location.shortDescription
+}
+
+export function getStreetViewStatus(key: keyof typeof google.maps.StreetViewStatus): google.maps.StreetViewStatus {
+  return google?.maps?.StreetViewStatus?.[key] ?? key
+}
+
+export function makeLatLng(lat: number, lng: number): google.maps.LatLng {
+  return new google.maps.LatLng(lat, lng)
 }
 
 export function isAcceptableCurve(
@@ -127,6 +144,13 @@ export function parseDate(date: Date): number {
   return Date.parse(`${year}-${monthStr}`)
 }
 
+export function extractDateFromPanoId(pano: string) {
+  const year = 2000 + Number(pano.slice(8, 10));
+  const month = pano.slice(10, 12);
+  const day = pano.slice(12, 14);
+  return `${year}-${month}-${day}`
+}
+
 export const isDate = (date: string) => {
   const parsed = new Date(date)
   return !isNaN(parsed.getTime())
@@ -141,7 +165,7 @@ export function randomPointInPoly(polygon: Polygon) {
   const lat =
     (Math.asin(
       Math.random() * (Math.sin((y_max * Math.PI) / 180) - Math.sin((y_min * Math.PI) / 180)) +
-        Math.sin((y_min * Math.PI) / 180),
+      Math.sin((y_min * Math.PI) / 180),
     ) *
       180) /
     Math.PI
@@ -164,6 +188,19 @@ export function distanceBetween(coords1: LatLng, coords2: LatLng) {
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
   const d = R * c
   return d
+}
+
+const A$1 = 114.59155902616465;
+const SCALE = 111319.49077777778;
+function deg2rad(deg: number) {
+  return deg * Math.PI / 180;
+}
+
+export function tencentToGcj02([x, y]: [number, number]) {
+  return [
+    x / SCALE,
+    A$1 * Math.atan(Math.exp(deg2rad(y / SCALE))) - 90
+  ];
 }
 
 export function randomInRange(min: number, max: number) {
