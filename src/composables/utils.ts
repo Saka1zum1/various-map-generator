@@ -3,8 +3,12 @@ export function isOfficial(pano: string, provider: string) {
     case 'google':
       return pano.length === 22  // Checks if pano ID is 22 characters long. Otherwise, it's an Ari
   // return (!/^\xA9 (?:\d+ )?Google$/.test(pano.copyright))
+    case 'yandex':
+      return pano.length === 34
     case 'tencent':
       return pano.length === 23
+    case 'baidu':
+      return pano.length === 27
     case 'kakao':
       return pano.length === 10
     default:
@@ -145,9 +149,9 @@ export function parseDate(date: Date): number {
 }
 
 export function extractDateFromPanoId(pano: string) {
-  const year = 2000 + Number(pano.slice(8, 10));
-  const month = pano.slice(10, 12);
-  const day = pano.slice(12, 14);
+  const year = 2000 + Number(pano.slice(0, 2));
+  const month = pano.slice(2, 4);
+  const day = pano.slice(4, 6);
   return `${year}-${month}-${day}`
 }
 

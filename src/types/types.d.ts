@@ -65,17 +65,3 @@ interface SearchInDescriptionConfig {
   searchMode: 'fullword' | 'startswith' | 'endswith' | 'contains' | 'sectionmatch'
   filterType: 'include' | 'exclude'
 }
-
-interface ExtendedStreetViewRequest extends google.maps.StreetViewLocationRequest {
-  pano?: string
-}
-
-interface StreetViewProvider {
-  getPanorama(
-    request: ExtendedStreetViewRequest,
-    onCompleted: (
-      result: google.maps.StreetViewPanoramaData | null,
-      status: google.maps.StreetViewStatus
-    ) => void
-  ): Promise<void>
-}
