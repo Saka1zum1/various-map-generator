@@ -1,7 +1,10 @@
 import { extractDateFromPanoId } from '@/composables/utils'
+import { getClosestPanoAtCoords } from "@/apple/tile";
+import { AppleLookAroundPano } from "@/apple/types";
 import gcoord from 'gcoord'
 
 let svService: google.maps.StreetViewService | null = null
+const applePanoCache = new Map<string, google.maps.StreetViewPanoramaData>()
 
 function getStreetViewService() {
     if (!svService) {
@@ -20,6 +23,63 @@ function getFromGoogle(
 ) {
     const sv = getStreetViewService()
     sv.getPanorama(request, onCompleted)
+}
+
+
+
+// Apple Look Around
+async function getFromAppleLookAround(
+    request: google.maps.StreetViewLocationRequest & { pano?: string },
+    onCompleted: (
+        res: google.maps.StreetViewPanoramaData | null,
+        status: google.maps.StreetViewStatus
+    ) => void
+) {
+    try {
+        let apple: AppleLookAroundPano | null = null
+
+        if (request.pano && applePanoCache.has(request.pano)) {
+            onCompleted(applePanoCache.get(request.pano)!, google.maps.StreetViewStatus.OK)
+            return
+        }
+
+        if (request.location) {
+            const lat = typeof request.location.lat === 'function' ? request.location.lat() : request.location.lat
+            const lng = typeof request.location.lng === 'function' ? request.location.lng() : request.location.lng
+            apple = await getClosestPanoAtCoords(lat, lng)
+        }
+
+        if (!apple?.panoId) {
+            onCompleted(null, google.maps.StreetViewStatus.ZERO_RESULTS)
+            return
+        }
+
+        const date = new Date(apple.date)
+        const panorama: google.maps.StreetViewPanoramaData = {
+            location: {
+                pano: apple.panoId,
+                latLng: new google.maps.LatLng(apple.lat, apple.lng),
+                description: apple.coverage_type == 3 ? null : "Default",
+            },
+            links: [],
+            tiles: {
+                centerHeading: apple.heading,
+                tileSize: new google.maps.Size(256, 256),
+                worldSize: new google.maps.Size(16384, 8192),
+                getTileUrl: () => "",
+            },
+            imageDate: date.toISOString().slice(0, 10),
+            copyright: "© Apple Look Around",
+            time: [{pano:apple.panoId, date:date }as any],
+        }
+
+        applePanoCache.set(apple.panoId, panorama)
+
+        onCompleted(panorama, google.maps.StreetViewStatus.OK)
+    } catch (error) {
+        console.error("[Apple Look Around] panorama fetch error:", error)
+        onCompleted(null, google.maps.StreetViewStatus.UNKNOWN_ERROR)
+    }
 }
 
 // Yandex
@@ -98,7 +158,7 @@ async function getFromYandex(
     }
 }
 
-// Tencent
+// Bing
 async function getFromTencent(
     request: google.maps.StreetViewLocationRequest & { pano?: string },
     onCompleted: (
@@ -166,6 +226,79 @@ async function getFromTencent(
                     date: new Date(date),
                 },
             ].sort((a, b) => a.date.getTime() - b.date.getTime()),
+        }
+
+        onCompleted(panorama, google.maps.StreetViewStatus.OK)
+    } catch (err) {
+        console.error('[Tencent] panorama fetch error:', err)
+        onCompleted(null, google.maps.StreetViewStatus.UNKNOWN_ERROR)
+    }
+}
+
+// Bing
+async function getFromBing(
+    request: google.maps.StreetViewLocationRequest & { pano?: string },
+    onCompleted: (
+        res: google.maps.StreetViewPanoramaData | null,
+        status: google.maps.StreetViewStatus,
+    ) => void,
+) {
+    try {
+        let panoId: string | undefined
+        const BING_SEARCH_URL = "https://t.ssl.ak.tiles.virtualearth.net/tiles/cmd/StreetSideBubbleMetaData"
+
+        if (request.pano) {
+            panoId = request.pano
+        } else if (request.location) {
+            const lat = typeof request.location.lat === 'function' ? request.location.lat() : request.location.lat
+            const lng = typeof request.location.lng === 'function' ? request.location.lng() : request.location.lng
+            const radius = request.radius || 50
+            const rangeDeg = radius / 1000 / 111;
+            const uri =  new URL(BING_SEARCH_URL)
+            uri.searchParams.set("count", "1");
+            uri.searchParams.set("north", (lat + rangeDeg).toString());
+            uri.searchParams.set("south", (lat - rangeDeg).toString());
+            uri.searchParams.set("east", (lng + rangeDeg).toString());
+            uri.searchParams.set("west", (lng - rangeDeg).toString());
+
+            const resp = await fetch(uri)
+            const json = await resp.json()
+            panoId = json[1]?.id
+        }
+
+        if (!panoId) {
+            onCompleted(null, google.maps.StreetViewStatus.ZERO_RESULTS)
+            return
+        }
+
+        const uri =  new URL(BING_SEARCH_URL)
+        uri.searchParams.set("id", panoId)
+        const resp = await fetch(uri)
+        const json = await resp.json()
+        const result = json?.[1]
+
+        if (!result?.id) {
+            onCompleted(null, google.maps.StreetViewStatus.ZERO_RESULTS)
+            return
+        }
+        const date =new Date(result.cd)
+
+        const panorama: google.maps.StreetViewPanoramaData = {
+            location: {
+                pano: panoId,
+                latLng: new google.maps.LatLng(result.la, result.lo),
+                description: ""
+            },
+            links: [],
+            tiles: {
+                centerHeading: result.he,
+                tileSize: new google.maps.Size(512, 512),
+                worldSize: new google.maps.Size(8192, 4096),
+                getTileUrl: () => '',
+            },
+            imageDate: date.toISOString().slice(0,10),
+            copyright: '© Bing Streetside',
+            time: [{pano:result.panoId, date:date }],
         }
 
         onCompleted(panorama, google.maps.StreetViewStatus.OK)
@@ -341,9 +474,17 @@ const StreetViewProviders = {
             getFromGoogle(request, onCompleted)
             return
         }
+        else if (provider === "apple") {
+            await getFromAppleLookAround(request, onCompleted);
+            return;
+        }
         else if (provider === 'tencent') {
             await getFromTencent(request, onCompleted)
             return
+        }
+        else if (provider === "bing") {
+            await getFromBing(request, onCompleted);
+            return;
         }
         else if (provider === 'baidu') {
             await getFromBaidu(request, onCompleted)

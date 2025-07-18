@@ -2,7 +2,11 @@ export function isOfficial(pano: string, provider: string) {
   switch (provider) {
     case 'google':
       return pano.length === 22  // Checks if pano ID is 22 characters long. Otherwise, it's an Ari
-  // return (!/^\xA9 (?:\d+ )?Google$/.test(pano.copyright))
+    // return (!/^\xA9 (?:\d+ )?Google$/.test(pano.copyright))
+    case 'apple':
+      return pano.length === 19
+    case 'bing':
+      return true
     case 'yandex':
       return pano.length === 34
     case 'tencent':
@@ -175,6 +179,11 @@ export function randomPointInPoly(polygon: Polygon) {
     Math.PI
   const lng = x_min + Math.random() * (x_max - x_min)
   return { lat, lng }
+}
+
+export function radians_to_degrees(radians: number) {
+  var pi = Math.PI;
+  return radians * (180 / pi);
 }
 
 export function distanceBetween(coords1: LatLng, coords2: LatLng) {

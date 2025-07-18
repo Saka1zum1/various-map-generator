@@ -112,6 +112,7 @@
           Provider :
           <select v-model="settings.provider">
             <option value="google">Google</option>
+            <option value="apple">Apple</option>
             <option value="bing">Bing</option>
             <option value="yandex">Yandex</option>
             <option value="tencent">Tencent</option>
@@ -1104,16 +1105,20 @@ function addLocation(
               url = `https://www.google.com/maps/@?api=1&map_action=pano&pano=${location.panoId}&heading=${heading}&pitch=${pitch}&fov=${180 / 2 ** zoom}`
               break
             case 'yandex':
-              url= `https://yandex.com/maps/?l=stv%2Csta&ll=${location.lng},${location.lat}&panorama%5Bdirection%5D=${heading},0&panorama%5Bfull%5D=true&panorama%5Bid%5D=${location.panoId}&panorama%5Bpoint%5D=${location.lng},${location.lat}`
               break
             case 'tencent':
               url = `https://qq-map.netlify.app/#base=roadmap&zoom=18&center=${location.lat},${location.lng}&pano=${location.panoId}&heading=${heading}&pitch=${pitch}&svz=0`
               break
             case 'baidu':
               url = `https://map.baidu.com/?newmap=1&shareurl=1&panotype=street&l=21&tn=B_NORMAL_MAP&sc=0&panoid=${location.panoId}&heading=${heading}&pitch=${pitch}&pid=${location.panoId}`
-              break  
+              break
+              url = `https://lookmap.eu.pythonanywhere.com/#c=15/${location.lat}/${location.lng}&p=${location.lat}/${location.lng}&a=${heading}/${pitch}`
+              break
+            case 'bing':
+              url = `https://www.bing.com/maps/?style=x&lvl=9.0&id=${location.panoId}&cp=${location.lat}%7E${location.lng}&dir=${heading || 0}&pi=${pitch || 0}`
+              break
             case 'kakao':
-              url = `https://map.kakao.com/?map_type=TYPE_MAP&map_attribute=ROADVIEW&panoid=${location.panoId}&pan=${heading}`
+              url = `https://map.kakao.com/?map_type=TYPE_MAP&map_attribute=ROADVIEW&panoid=${location.panoId}&pan=${heading}&tilt=${pitch}`
               break
             default:
               url = `https://www.google.com/maps/@?api=1&map_action=pano&pano=${location.panoId}&heading=${heading}&pitch=${pitch}&fov=${180 / 2 ** zoom}`
