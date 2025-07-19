@@ -156,7 +156,22 @@ export function extractDateFromPanoId(pano: string) {
   const year = 2000 + Number(pano.slice(0, 2));
   const month = pano.slice(2, 4);
   const day = pano.slice(4, 6);
-  return `${year}-${month}-${day}`
+  const hour = pano.slice(6, 8);
+  const minute = pano.slice(8, 10);
+  const second = pano.slice(10, 12);
+  return `${year}-${month}-${day}T${hour}:${minute}:${second}`;
+}
+
+export function formatTimeStr(datetimeStr: string): string {
+  const date = new Date(datetimeStr);
+  if (isNaN(date.getTime())) throw new Error("Invalid date string");
+  const yyyy = date.getFullYear();
+  const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+  const dd = date.getDate().toString().padStart(2, '0');
+  const hh = date.getHours().toString().padStart(2, '0');
+  const min = date.getMinutes().toString().padStart(2, '0');
+  const sec = date.getSeconds().toString().padStart(2, '0');
+  return `${yyyy}-${mm}-${dd}T${hh}:${min}:${sec}`;
 }
 
 export const isDate = (date: string) => {

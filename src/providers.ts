@@ -1,4 +1,4 @@
-import { extractDateFromPanoId } from '@/composables/utils'
+import { extractDateFromPanoId, formatTimeStr } from '@/composables/utils'
 import { getClosestPanoAtCoords } from "@/apple/tile";
 import { AppleLookAroundPano } from "@/apple/types";
 import gcoord from 'gcoord'
@@ -59,7 +59,7 @@ async function getFromAppleLookAround(
             location: {
                 pano: apple.panoId,
                 latLng: new google.maps.LatLng(apple.lat, apple.lng),
-                description: apple.coverage_type == 3 ? null : "Default",
+                description: apple.coverage_type == 3 ? "backpack" : (apple.camera_type),
             },
             links: [],
             tiles: {
@@ -68,7 +68,7 @@ async function getFromAppleLookAround(
                 worldSize: new google.maps.Size(16384, 8192),
                 getTileUrl: () => "",
             },
-            imageDate: date.toISOString().slice(0, 10),
+            imageDate: date.toISOString(),
             copyright: "© Apple Look Around",
             time: [{ pano: apple.panoId, date: date } as any],
         }
@@ -118,7 +118,7 @@ async function getFromYandex(
             return
         }
 
-        const date = new Date(result.Data.timestamp * 1000)
+        const date = new Date(Number(result.Data.panoramaId.split('_').pop()) * 1000)
         const heading = (result.Data.EquirectangularProjection.Origin[0] + 180) % 360
 
         const panorama: google.maps.StreetViewPanoramaData = {
@@ -137,7 +137,7 @@ async function getFromYandex(
                 worldSize: new google.maps.Size(result.Data.Images.Zooms[0].width, result.Data.Images.Zooms[0].height),
                 getTileUrl: () => '',
             },
-            imageDate: date.toISOString().slice(0, 10),
+            imageDate: date.toISOString(),
             copyright: result.Author ? result.Author.name : '© Yandex Maps',
             time: [
                 ...(result.Annotation?.HistoricalPanoramas?.map((r: any) => ({
@@ -195,17 +195,16 @@ async function getFromTencent(
             return
         }
 
-        const date = extractDateFromPanoId(result.basic.svid.slice(8, 14))
+        const date = extractDateFromPanoId(result.basic.svid.slice(8, 20))
         const [lng, lat] = gcoord.transform([result.addr.x_lng, result.addr.y_lat], gcoord.GCJ02, gcoord.WGS84)
         const trans_svid = result.basic.trans_svid
-
 
         const panorama: google.maps.StreetViewPanoramaData = {
             location: {
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
                 description: result.basic.append_addr,
-                shortDescription: trans_svid || null
+                shortDescription: result.basic.mode === "night" ? panoId : (trans_svid || null)
             },
             links: result.all_scenes?.map((r: any) => ({
                 pano: r.svid,
@@ -222,7 +221,7 @@ async function getFromTencent(
             time: [
                 ...(result.history?.nodes?.map((r: any) => ({
                     pano: r.svid,
-                    date: new Date(extractDateFromPanoId(r.svid.slice(8, 14))),
+                    date: new Date(extractDateFromPanoId(r.svid.slice(8, 20))),
                 })) ?? []),
                 {
                     pano: panoId,
@@ -299,7 +298,7 @@ async function getFromBing(
                 worldSize: new google.maps.Size(8192, 4096),
                 getTileUrl: () => '',
             },
-            imageDate: date.toISOString().slice(0, 10),
+            imageDate: formatTimeStr(result.cd),
             copyright: '© Bing Streetside',
             time: [{ pano: result.panoId, date: date }],
         }
@@ -448,7 +447,7 @@ async function getFromBaidu(
             time: [
                 ...(result.TimeLine?.map((r: any) => ({
                     pano: r.ID,
-                    date: new Date(extractDateFromPanoId(r.ID.slice(10, 16))),
+                    date: new Date(extractDateFromPanoId(r.ID.slice(10, 22))),
                 })) ?? []),
                 {
                     pano: panoId,

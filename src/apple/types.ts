@@ -1,20 +1,23 @@
 export class AppleLookAroundPano {
-  coverage_type: number;
-  date: number;
   panoId: string;
+  coverage_type: number;
+  camera_type: string;
+  date: number;
   heading: number;
   lat: number;
   lng: number;
 
   constructor(
-    coverage_type: number,
-    date: string,
     panoId: string,
+    coverage_type: number,
+    camera_type: string,
+    date: string,
     heading: number,
     lat: number,
     lng: number
   ) {
     this.coverage_type=coverage_type;
+    this.camera_type=camera_type;
     this.date = Number(date);
     this.panoId = panoId;
     this.heading = heading;

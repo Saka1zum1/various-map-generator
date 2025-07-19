@@ -28,6 +28,30 @@ function tile_coord_to_wgs84(x: number, y: number, zoom: number) {
   return [latDeg, lonDeg];
 }
 
+function getCameraType(face: any): string {
+  if(!face) return 'unknown'
+
+  const fov_h = face.fovH
+  const cy = face.cy
+
+  if (
+    Math.abs(fov_h - 1.6144296) < 0.01 &&
+    Math.abs(cy - 0.27488935) < 0.01
+  ) {
+    return 'bigcam'
+  }
+
+  // smallcam/backpack
+  if (
+    Math.abs(fov_h - 1.8325957) < 0.01 &&
+    Math.abs(cy - 0.30543262) < 0.01
+  ) {
+    return 'smallcam'
+  }
+
+  return 'unknown'
+}
+
 function headingFromUnknowns(unknown10: number, unknown11: number) {
   let westmin = 1;
   let westmax = 2159;
@@ -90,6 +114,7 @@ async function getCoverageInMapTile(x: number, y: number): Promise<AppleLookArou
 
   try {
     const response = await getCoverageTileRaw(x, y);
+
     const coverage: AppleLookAroundPano[] = [];
     for (const pano of response.pano ?? []) {
       const coords = protobuf_tile_offset_to_wsg84(
@@ -100,9 +125,10 @@ async function getCoverageInMapTile(x: number, y: number): Promise<AppleLookArou
       );
 
       const p = new AppleLookAroundPano(
-        response.buildTable[pano.buildTableIdx].coverageType,
-        pano.timestamp?.toString() ?? "unknown",
         pano.panoid?.toString() ?? "unknown",
+        response.buildTable?.[pano.buildTableIdx].coverageType,
+        getCameraType(response.cameraMetadata?.[pano.cameraMetadataIdx?.[0]]?.lensProjection),
+        pano.timestamp?.toString() ?? "unknown",
         headingFromUnknowns(pano.tilePosition.pitch, pano.tilePosition.roll),
         coords[0],
         coords[1]

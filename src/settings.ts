@@ -23,6 +23,11 @@ const defaultSettings = {
       23: true,
       4: true,
     },
+    apple: {
+      "bigcam": true,
+      "smallcam": true,
+      "backpack": true
+    }
   },
   rejectDateless: true,
   rejectNoDescription: true,
@@ -36,7 +41,7 @@ const defaultSettings = {
   onlyOneInTimeframe: false,
   findPhotospheres: false,
   findDrones: false,
-  findNightCoverage:false,
+  findNightCoverage: false,
   checkLinks: false,
   linksDepth: 2,
 
@@ -50,6 +55,11 @@ const defaultSettings = {
   selectMonths: false,
   checkAllDates: false,
   randomInTimeline: false,
+
+  findByMinutes: {
+    enabled: false,
+    range: [0, 1439],
+  },
 
   findByTileColor: {
     enabled: false,
@@ -301,7 +311,7 @@ const defaultSettings = {
   checkImports: false,
 }
 
-const storedSettings = useStorage('map_generator__settings_v11', defaultSettings)
+const storedSettings = useStorage('map_generator__settings_v12', defaultSettings)
 const settings = reactive(storedSettings.value)
 settings.toDate = currentDate
 settings.toYear = currentYear

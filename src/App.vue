@@ -179,7 +179,8 @@
 
               <Checkbox v-model="settings.rejectDescription">Find trekker coverage</Checkbox>
 
-              <Checkbox v-model="settings.findNightCoverage" v-if="settings.provider === 'tencent'||settings.provider === 'baidu'">
+              <Checkbox v-model="settings.findNightCoverage"
+                v-if="settings.provider === 'tencent' || settings.provider === 'baidu'">
                 Find night coverage
               </Checkbox>
 
@@ -197,12 +198,18 @@
                 </div>
               </div>
 
-              <Checkbox v-model="settings.findByGeneration.enabled" v-if="settings.provider === 'google'">Find by
+              <Checkbox v-model="settings.findByGeneration.enabled"
+                v-if="['google', 'apple'].includes(settings.provider)">Find by
                 generation</Checkbox>
-              <div v-if="settings.findByGeneration.enabled" class="ml-6">
+              <div v-if="settings.findByGeneration.enabled && settings.provider === 'google'" class="ml-6">
                 <Checkbox v-model="settings.findByGeneration.generation[1]">Gen 1</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[23]">Gen 2 & 3</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[4]">Gen 4</Checkbox>
+              </div>
+              <div v-if="settings.findByGeneration.enabled && settings.provider === 'apple'" class="ml-6">
+                <Checkbox v-model="settings.findByGeneration.apple.bigcam">Big Camera</Checkbox>
+                <Checkbox v-model="settings.findByGeneration.apple.smallcam">Small Camera</Checkbox>
+                <Checkbox v-model="settings.findByGeneration.apple.backpack">Backpack</Checkbox>
               </div>
             </div>
 
@@ -259,6 +266,23 @@
                   <input type="number" v-model.number="settings.toYear" min="2007" />
                 </div>
               </div>
+            </div>
+
+            <div v-if="settings.provider != 'google'" class="flex items-center">
+              <Checkbox v-model="settings.findByMinutes.enabled">Filter by minutes</Checkbox>
+              <Slider v-if="settings.findByMinutes.enabled" v-model="settings.findByMinutes.range" :min="0" :max="1439"
+                :step="5" :showTooltip="'focus'" :range="true" class="w-48 ml-2" :format="val => {
+                  const h = Math.floor(val / 60).toString().padStart(2, '0')
+                  const m = Math.floor(val % 60).toString().padStart(2, '0')
+                  return `${h}:${m}`
+                }" />
+              <span v-if="settings.findByMinutes.enabled" class="ml-2">
+                {{ Math.floor(settings.findByMinutes.range[0] / 60).toString().padStart(2, '0') }}:{{
+                  (settings.findByMinutes.range[0] % 60).toString().padStart(2, '0') }}
+                -
+                {{ Math.floor(settings.findByMinutes.range[1] / 60).toString().padStart(2, '0') }}:{{
+                  (settings.findByMinutes.range[1] % 60).toString().padStart(2, '0') }}
+              </span>
             </div>
 
             <Checkbox v-model="settings.checkAllDates">Check all dates</Checkbox>
@@ -698,7 +722,14 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
         return false
 
       // Find trekkers
-      if (settings.rejectDescription && hasAnyDescription(res.location)) return false
+      if (settings.rejectDescription) {
+        if (settings.provider === 'apple') {
+          if (res.location.description != 'backpack') return false
+        }
+        else {
+          if (hasAnyDescription(res.location)) return false
+        }
+      }
 
       // Exclude Yandex Unofficial
       if (settings.provider === 'yandex' && !res.copyright?.includes('Yandex')) return false
@@ -722,32 +753,57 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
     }
 
     if (
+      ['google', 'apple'].includes(settings.provider) &&
       settings.findByGeneration.enabled &&
       ((!settings.rejectOfficial && !settings.checkAllDates) || settings.selectMonths)
     ) {
-      const gen = getCameraGeneration(res)
-      if (gen === 0) return false
-      if (!settings.findByGeneration.generation[gen]) return false
+      if (settings.provider === 'apple') {
+        const camera_type = res.location.description
+        if (!settings.findByGeneration.apple[camera_type]) return false
+      }
+      else {
+        const gen = getCameraGeneration(res)
+        if (gen === 0) return false
+        if (!settings.findByGeneration.generation[gen]) return false
+      }
     }
 
-    if (settings.findNightCoverage) {
-      if (settings.provider === 'tencent') {
-        if (!res.location.shortDescription) return false
-        return StreetViewProviders.getPanorama(
-          settings.provider,
-          { pano: res.location.shortDescription },
-          (nightRes, nightStatus) => {
-            if (nightStatus === google.maps.StreetViewStatus.OK && nightRes) {
-              getPano(nightRes.location.pano, polygon)
-            }
-            return false
+    if (settings.findNightCoverage && settings.provider === 'tencent') {
+      if (!res.location.shortDescription) return false
+      return StreetViewProviders.getPanorama(
+        settings.provider,
+        { pano: res.location.shortDescription },
+        (nightRes, nightStatus) => {
+          if (nightStatus === google.maps.StreetViewStatus.OK && nightRes) {
+            getPano(nightRes.location.pano, polygon)
           }
-        )
+          return false
+        }
+      )
+    }
+
+    if (
+      settings.findByMinutes.enabled && settings.provider != 'google'
+    ) {
+      var panoMinutes
+      switch (settings.provider) {
+        case 'baidu':
+          panoMinutes = Number(res.location.pano.slice(16, 18))*60 + Number(res.location.pano.slice(18, 20))
+          break
+        case 'tencent':
+          panoMinutes = Number(res.location.pano.slice(14, 16))*60 + Number(res.location.pano.slice(16, 18))
+          if (
+            res.location.shortDescription &&
+            res.location.pano == res.location.shortDescription) panoMinutes += 1200
+          break
+        case 'bing':
+        case 'yandex':
+        case 'kakao':
+          panoMinutes = Number(res.imageDate.slice(11,13))*60 + Number(res.imageDate.slice(14,16))
+          break
       }
-      else if (settings.provider === 'baidu'){
-        const captureTime=Number(res.location.pano.slice(16,20))
-        return captureTime>=1830
-      }
+
+      if (panoMinutes < settings.findByMinutes.range[0] || panoMinutes > settings.findByMinutes.range[1]) return false
     }
 
     if (settings.randomInTimeline && res.time) {
@@ -1138,10 +1194,10 @@ function addLocation(
               url = `https://map.baidu.com/?newmap=1&shareurl=1&panotype=street&l=21&tn=B_NORMAL_MAP&sc=0&panoid=${location.panoId}&heading=${heading}&pitch=${pitch}&pid=${location.panoId}`
               break
             case 'apple':
-              url = `https://lookmap.eu.pythonanywhere.com/#c=15/${location.lat}/${location.lng}&p=${location.lat}/${location.lng}&a=${heading}/${pitch}`
+              url = `https://lookmap.eu.pythonanywhere.com/#c=18/${location.lat}/${location.lng}&p=${location.lat}/${location.lng}&a=${heading}/${pitch}`
               break
             case 'bing':
-              url = `https://www.bing.com/maps/?style=x&lvl=9.0&id=${location.panoId}&cp=${location.lat}%7E${location.lng}&dir=${heading || 0}&pi=${pitch || 0}`
+              url = `https://www.bing.com/maps/?style=x&lvl=18&id=${location.panoId}&cp=${location.lat}%7E${location.lng}&dir=${heading || 0}&pi=${pitch || 0}`
               break
             case 'kakao':
               url = `https://map.kakao.com/?map_type=TYPE_MAP&map_attribute=ROADVIEW&panoid=${location.panoId}&pan=${heading}&tilt=${pitch}`
