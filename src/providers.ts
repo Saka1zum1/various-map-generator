@@ -28,7 +28,7 @@ async function getFromGoogle(
 
 
 // Apple Look Around
-async function getFromAppleLookAround(
+async function getFromApple(
     request: google.maps.StreetViewLocationRequest & { pano?: string },
     onCompleted: (
         res: google.maps.StreetViewPanoramaData | null,
@@ -477,7 +477,7 @@ const StreetViewProviders = {
             return
         }
         else if (provider === "apple") {
-            await getFromAppleLookAround(request, onCompleted);
+            await getFromApple(request, onCompleted);
             return;
         }
         else if (provider === 'tencent') {

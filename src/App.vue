@@ -796,6 +796,7 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
             res.location.shortDescription &&
             res.location.pano == res.location.shortDescription) panoMinutes += 1200
           break
+        case 'apple':
         case 'bing':
         case 'yandex':
         case 'kakao':
