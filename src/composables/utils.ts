@@ -14,7 +14,7 @@ export function isOfficial(pano: string, provider: string) {
     case 'baidu':
       return pano.length === 27
     case 'kakao':
-      return pano.length === 10
+      return true
     default:
       return false
   }

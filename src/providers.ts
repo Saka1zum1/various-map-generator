@@ -14,7 +14,7 @@ function getStreetViewService() {
 }
 
 // Google
-function getFromGoogle(
+async function getFromGoogle(
     request: google.maps.StreetViewLocationRequest,
     onCompleted: (
         res: google.maps.StreetViewPanoramaData | null,
@@ -22,7 +22,7 @@ function getFromGoogle(
     ) => void,
 ) {
     const sv = getStreetViewService()
-    sv.getPanorama(request, onCompleted)
+    await sv.getPanorama(request, onCompleted)
 }
 
 
@@ -70,7 +70,7 @@ async function getFromAppleLookAround(
             },
             imageDate: date.toISOString().slice(0, 10),
             copyright: "© Apple Look Around",
-            time: [{pano:apple.panoId, date:date }as any],
+            time: [{ pano: apple.panoId, date: date } as any],
         }
 
         applePanoCache.set(apple.panoId, panorama)
@@ -188,7 +188,7 @@ async function getFromTencent(
         const uri = `https://sv.map.qq.com/sv?output=json&svid=${panoId}`
         const resp = await fetch(uri)
         const json = await resp.json()
-        const result = json.detail
+        const result = json?.detail
 
         if (!result?.basic?.svid) {
             onCompleted(null, google.maps.StreetViewStatus.ZERO_RESULTS)
@@ -197,12 +197,15 @@ async function getFromTencent(
 
         const date = extractDateFromPanoId(result.basic.svid.slice(8, 14))
         const [lng, lat] = gcoord.transform([result.addr.x_lng, result.addr.y_lat], gcoord.GCJ02, gcoord.WGS84)
+        const trans_svid = result.basic.trans_svid
+
 
         const panorama: google.maps.StreetViewPanoramaData = {
             location: {
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
-                description: result.basic.append_addr
+                description: result.basic.append_addr,
+                shortDescription: trans_svid || null
             },
             links: result.all_scenes?.map((r: any) => ({
                 pano: r.svid,
@@ -254,7 +257,7 @@ async function getFromBing(
             const lng = typeof request.location.lng === 'function' ? request.location.lng() : request.location.lng
             const radius = request.radius || 50
             const rangeDeg = radius / 1000 / 111;
-            const uri =  new URL(BING_SEARCH_URL)
+            const uri = new URL(BING_SEARCH_URL)
             uri.searchParams.set("count", "1");
             uri.searchParams.set("north", (lat + rangeDeg).toString());
             uri.searchParams.set("south", (lat - rangeDeg).toString());
@@ -271,7 +274,7 @@ async function getFromBing(
             return
         }
 
-        const uri =  new URL(BING_SEARCH_URL)
+        const uri = new URL(BING_SEARCH_URL)
         uri.searchParams.set("id", panoId)
         const resp = await fetch(uri)
         const json = await resp.json()
@@ -281,7 +284,7 @@ async function getFromBing(
             onCompleted(null, google.maps.StreetViewStatus.ZERO_RESULTS)
             return
         }
-        const date =new Date(result.cd)
+        const date = new Date(result.cd)
 
         const panorama: google.maps.StreetViewPanoramaData = {
             location: {
@@ -296,9 +299,9 @@ async function getFromBing(
                 worldSize: new google.maps.Size(8192, 4096),
                 getTileUrl: () => '',
             },
-            imageDate: date.toISOString().slice(0,10),
+            imageDate: date.toISOString().slice(0, 10),
             copyright: '© Bing Streetside',
-            time: [{pano:result.panoId, date:date }],
+            time: [{ pano: result.panoId, date: date }],
         }
 
         onCompleted(panorama, google.maps.StreetViewStatus.OK)
@@ -471,7 +474,7 @@ const StreetViewProviders = {
         ) => void,
     ) => {
         if (provider === 'google') {
-            getFromGoogle(request, onCompleted)
+            await getFromGoogle(request, onCompleted)
             return
         }
         else if (provider === "apple") {

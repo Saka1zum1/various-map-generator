@@ -179,6 +179,10 @@
 
               <Checkbox v-model="settings.rejectDescription">Find trekker coverage</Checkbox>
 
+              <Checkbox v-model="settings.findNightCoverage" v-if="settings.provider === 'tencent'||settings.provider === 'baidu'">
+                Find night coverage
+              </Checkbox>
+
               <Checkbox v-model="settings.onlyOneInTimeframe"
                 title="Only allow locations that don't have other nearby coverage in timeframe.">
                 Only one panorama on location
@@ -193,7 +197,8 @@
                 </div>
               </div>
 
-              <Checkbox v-model="settings.findByGeneration.enabled">Find by generation</Checkbox>
+              <Checkbox v-model="settings.findByGeneration.enabled" v-if="settings.provider === 'google'">Find by
+                generation</Checkbox>
               <div v-if="settings.findByGeneration.enabled" class="ml-6">
                 <Checkbox v-model="settings.findByGeneration.generation[1]">Gen 1</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[23]">Gen 2 & 3</Checkbox>
@@ -725,6 +730,26 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       if (!settings.findByGeneration.generation[gen]) return false
     }
 
+    if (settings.findNightCoverage) {
+      if (settings.provider === 'tencent') {
+        if (!res.location.shortDescription) return false
+        return StreetViewProviders.getPanorama(
+          settings.provider,
+          { pano: res.location.shortDescription },
+          (nightRes, nightStatus) => {
+            if (nightStatus === google.maps.StreetViewStatus.OK && nightRes) {
+              getPano(nightRes.location.pano, polygon)
+            }
+            return false
+          }
+        )
+      }
+      else if (settings.provider === 'baidu'){
+        const captureTime=Number(res.location.pano.slice(16,20))
+        return captureTime>=1830
+      }
+    }
+
     if (settings.randomInTimeline && res.time) {
       const randomIndex = Math.floor(Math.random() * res.time.length)
       const randomPano = res.time[randomIndex]
@@ -771,7 +796,6 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       ) {
         return false
       }
-
       getPano(res.location.pano, polygon)
     }
 

@@ -36,6 +36,7 @@ const defaultSettings = {
   onlyOneInTimeframe: false,
   findPhotospheres: false,
   findDrones: false,
+  findNightCoverage:false,
   checkLinks: false,
   linksDepth: 2,
 
