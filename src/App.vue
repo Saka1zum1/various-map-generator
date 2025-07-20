@@ -469,7 +469,7 @@
         </div>
 
         <Collapsible :is-open="panels.marker" class="p-1">
-          <Checkbox v-model="settings.markers.noBlueLine" v-on:change="updateMarkerLayers('noBlueLine')">
+          <Checkbox v-model="settings.markers.noBlueLine" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('noBlueLine')">
             <span class="h-3 w-3 bg-[#E412D2] rounded-full"></span>No blue line
           </Checkbox>
           <Checkbox v-model="settings.markers.newRoad" v-on:change="updateMarkerLayers('newRoad')">
@@ -478,10 +478,10 @@
           <Checkbox v-model="settings.markers.gen4" v-on:change="updateMarkerLayers('gen4')">
             <span class="h-3 w-3 bg-[#2880CA] rounded-full"></span>Gen 4 Update
           </Checkbox>
-          <Checkbox v-model="settings.markers.gen2Or3" v-on:change="updateMarkerLayers('gen2Or3')">
+          <Checkbox v-model="settings.markers.gen2Or3" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('gen2Or3')">
             <span class="h-3 w-3 bg-[#9A28CA] rounded-full"></span>Gen 2 or 3 Update
           </Checkbox>
-          <Checkbox v-model="settings.markers.gen1" v-on:change="updateMarkerLayers('gen1')">
+          <Checkbox v-model="settings.markers.gen1" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('gen1')">
             <span class="h-3 w-3 bg-[#24AC20] rounded-full"></span>Gen 1 Update
           </Checkbox>
           <Checkbox v-model="settings.markers.cluster" v-on:change="updateClusters" title="For lag reduction.">
@@ -1121,7 +1121,8 @@ function addLoc(pano: google.maps.StreetViewPanoramaData, polygon: Polygon) {
   // New road
   if (!previousPano) {
     checkHasBlueLine(pano.location.latLng.toJSON()).then((hasBlueLine) => {
-      addLocation(location, polygon, hasBlueLine ? icons.newLoc : icons.noBlueLine)
+      addLocation(location, polygon, 
+      settings.provider != 'google'? icons.newLoc : (hasBlueLine ? icons.newLoc : icons.noBlueLine))
     })
   } else {
     StreetViewProviders.getPanorama(settings.provider, { pano: previousPano }, (previousPano) => {
