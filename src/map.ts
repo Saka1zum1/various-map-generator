@@ -89,21 +89,30 @@ function tileXYToQuadKey(x: number, y: number, zoom: number): string {
 }
 
 class BingTileLayer extends L.TileLayer {
-  constructor() {
+  private layer: string;
+
+  constructor(layer: string) {
     super('', {
       tileSize: 256,
       maxZoom: 20,
       attribution: '',
     });
+    this.layer = layer;
   }
 
   override getTileUrl(coords: L.Coords): string {
     const quadKey = tileXYToQuadKey(coords.x, coords.y, coords.z);
-    return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?it=Z,HC`;
+    if (this.layer === 'sv') {
+      return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?it=Z,HC`;
+    }
+    else {
+      return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?mkt=en-us&ur=us&it=G,LC,L&jp=1&og=2618&sv=9.33&n=t&dre=1&o=webp,95&cstl=s23&st=bld|v:0`;
+    }
   }
 }
 
-const bingStreetideLayer = new BingTileLayer()
+const bingBaseLayer = new BingTileLayer('r')
+const bingStreetideLayer = new BingTileLayer('sv')
 
 const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"] })
 
@@ -112,16 +121,31 @@ const baseMaps = {
   Satellite: satelliteLayer,
   Terrain: terrainLayer,
   OSM: osmLayer,
-  Tencent: tencentBaseLayer
+  Bing: bingBaseLayer,
+  Tencent: tencentBaseLayer,
 }
 
 const overlayMaps = {
   'Google Street View': gsvLayer,
   'Google Street View Official Only': gsvLayer2,
   'Google Street View Roads (Only Works at Zoom Level 12+)': gsvLayer3,
-  'Unofficial coverage only': gsvLayer4,
-  'Bing Streetside coverage': bingStreetideLayer
+  'Google Unofficial coverage only': gsvLayer4,
+  'Bing Streetside': bingStreetideLayer
 }
+
+const allLayers = [
+  roadmapLayer,
+  satelliteLayer,
+  terrainLayer,
+  osmLayer,
+  bingBaseLayer,
+  tencentBaseLayer,
+  gsvLayer,
+  gsvLayer2,
+  gsvLayer3,
+  gsvLayer4,
+  bingStreetideLayer
+]
 
 const drawnPolygonsLayer = new L.GeoJSON()
 
@@ -266,6 +290,36 @@ async function initMap(el: string) {
   }
 
   return map
+}
+
+function toggleMap(provider: string) {
+  function resetLayer() {
+    allLayers.forEach(layer => {
+      if (map.hasLayer(layer)) {
+        map.removeLayer(layer);
+      }
+    });
+  }
+  if (provider === 'google') {
+    resetLayer()
+    roadmapLayer.addTo(map)
+    gsvLayer.addTo(map)
+  }
+  else if (provider === 'bing') {
+    resetLayer()
+    bingBaseLayer.addTo(map)
+    bingStreetideLayer.addTo(map)
+  }
+  else if (provider === 'tencent') {
+    resetLayer()
+    tencentBaseLayer.addTo(map)
+  }
+  else if (provider === 'baidu') {
+
+  }
+  else if (provider === 'yandex') {
+
+  }
 }
 
 const copyCoords = (e: L.ContextMenuItemClickEvent) => {
@@ -569,6 +623,7 @@ const icons = {
 export {
   L,
   initMap,
+  toggleMap,
   selectLayer,
   deselectLayer,
   toggleLayer,

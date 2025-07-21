@@ -110,7 +110,7 @@
         </div>
         <div class="flex items-center justify-between">
           Provider :
-          <select v-model="settings.provider">
+          <select v-model="settings.provider" @change="toggleMap(settings.provider)">
             <option value="google">Google</option>
             <option value="apple">Apple</option>
             <option value="bing">Bing</option>
@@ -532,6 +532,7 @@ import { settings } from '@/settings'
 import {
   L,
   initMap,
+  toggleMap,
   selectLayer,
   deselectLayer,
   toggleLayer,
