@@ -180,7 +180,7 @@
               <Checkbox v-model="settings.rejectDescription">Find trekker coverage</Checkbox>
 
               <Checkbox v-model="settings.findNightCoverage"
-                v-if="settings.provider === 'tencent' || settings.provider === 'baidu'">
+                v-if="settings.provider === 'tencent'">
                 Find night coverage
               </Checkbox>
 
@@ -475,8 +475,9 @@
           <Checkbox v-model="settings.markers.newRoad" v-on:change="updateMarkerLayers('newRoad')">
             <span class="h-3 w-3 bg-[#CA283F] rounded-full"></span>New Road
           </Checkbox>
-          <Checkbox v-model="settings.markers.gen4" v-on:change="updateMarkerLayers('gen4')">
-            <span class="h-3 w-3 bg-[#2880CA] rounded-full"></span>Gen 4 Update
+          <Checkbox v-model="settings.markers.gen4" @change="updateMarkerLayers('gen4')">
+            <span class="h-3 w-3 bg-[#2880CA] rounded-full"></span>
+            {{ settings.provider !== 'google' ? 'Update' : 'Gen 4 Update' }}
           </Checkbox>
           <Checkbox v-model="settings.markers.gen2Or3" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('gen2Or3')">
             <span class="h-3 w-3 bg-[#9A28CA] rounded-full"></span>Gen 2 or 3 Update

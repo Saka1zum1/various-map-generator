@@ -32,7 +32,7 @@ const roadmapBaseLayer = L.tileLayer(
 )
 const roadmapLabelsLayer = L.tileLayer(
   'https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m2!1e0!2sm!3m5!2sen!3sus!5e1105!12m1!1e15!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0',
-  { pane: 'labelPane' },
+  { minZoom: 1, maxZoom: 20, pane: 'labelPane' },
 )
 const roadmapLayer = L.layerGroup([roadmapBaseLayer, roadmapLabelsLayer])
 
@@ -54,16 +54,18 @@ const satelliteLayer = L.layerGroup([satelliteBaseLayer, satelliteLabelsLayer])
 
 const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
   minZoom: 1,
-  maxZoom: 19,
+  maxZoom: 20,
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 })
 
 const gsvLayer = L.tileLayer(
   'https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m8!1e2!2ssvv!4m2!1scc!2s*211m3*211e2*212b1*213e2*211m3*211e3*212b1*213e2*212b1*214b1!4m2!1ssvl!2s*211b0*212b1!3m8!2sen!3sus!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0',
+  { maxZoom: 20 }
 )
 const gsvLayer2 = L.tileLayer(
   'https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m8!1e2!2ssvv!4m2!1scc!2s*211m3*211e2*212b1*213e2*212b1*214b1!4m2!1ssvl!2s*211b0*212b1!3m8!2sen!3sus!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0',
+  { maxZoom: 20 }
 )
 const gsvLayer3 = L.tileLayer(
   'https://maps.googleapis.com/maps/vt?pb=!1m5!1m4!1i{z}!2i{x}!3i{y}!4i256!2m8!1e2!2ssvv!4m2!1scb_client!2sapiv3!4m2!1scc!2s*211m3*211e3*212b1*213e2*211m3*211e2*212b1*213e2!3m3!3sUS!12m1!1e68!4e0',
@@ -71,6 +73,7 @@ const gsvLayer3 = L.tileLayer(
 )
 const gsvLayer4 = L.tileLayer(
   'https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m8!1e2!2ssvv!4m2!1scc!2s*211m3*211e3*212b1*213e2*212b1*214b1!4m2!1ssvl!2s*211b0*212b1!3m8!2sen!3sus!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0',
+  { maxZoom: 20 }
 )
 
 function tileXYToQuadKey(x: number, y: number, zoom: number): string {
@@ -100,16 +103,16 @@ class BingTileLayer extends L.TileLayer {
   }
 }
 
-const bingStreetideLayer=new BingTileLayer()
+const bingStreetideLayer = new BingTileLayer()
 
-const tencentBaseLayer=L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0","1", "2", "3"] })
+const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"] })
 
 const baseMaps = {
   Roadmap: roadmapLayer,
   Satellite: satelliteLayer,
   Terrain: terrainLayer,
   OSM: osmLayer,
-  Tencent:tencentBaseLayer
+  Tencent: tencentBaseLayer
 }
 
 const overlayMaps = {
