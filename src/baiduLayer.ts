@@ -113,7 +113,7 @@ async function renderTile(
     return finalCanvas;
 }
 
-export class BaiduTileLayer extends L.GridLayer {
+export class BaiduLayer extends L.GridLayer {
     filter: string;
     constructor(options: L.GridLayerOptions & { filter?: string } = {}) {
         super(options);
@@ -122,11 +122,12 @@ export class BaiduTileLayer extends L.GridLayer {
 
     #tiles = new Map<HTMLCanvasElement, AbortController>();
 
-    minZoom = 0;
-    maxZoom = 20;
-
     createTile(coords: L.Coords, done: L.DoneCallback) {
         const tile = document.createElement("canvas");
+        if (coords.z < 5) {
+            done(undefined, tile);
+            return tile
+        }
         tile.width = TILE_SIZE;
         tile.height = TILE_SIZE;
         const topLeftPixel = { x: coords.x * TILE_SIZE, y: coords.y * TILE_SIZE };

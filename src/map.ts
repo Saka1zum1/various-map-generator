@@ -19,7 +19,9 @@ import { ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { settings } from '@/settings'
 import { isValidGeoJSON, getPolygonName, readFileAsText } from '@/composables/utils.ts'
-import { BaiduTileLayer } from './baiduTileLayer'
+import { BaiduLayer } from './baiduLayer'
+import { YandexLayer } from './yandexLayer'
+import { KakaoLayer } from './kakaoLayer'
 
 import { useStore } from '@/store'
 const { selected, select, state } = useStore()
@@ -107,7 +109,7 @@ class BingTileLayer extends L.TileLayer {
       return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?it=Z,HC`;
     }
     else {
-      return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?mkt=en-us&ur=us&it=G,LC,L&jp=1&og=2618&sv=9.33&n=t&dre=1&o=webp,95&cstl=s23&st=bld|v:0`;
+      return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?mkt=en-us&ur=cn&it=G,LC,L&jp=1&og=2618&sv=9.33&n=t&dre=1&o=webp,95&cstl=s23&st=bld|v:0`;
     }
   }
 }
@@ -116,12 +118,16 @@ const bingBaseLayer = new BingTileLayer('r')
 const bingStreetideLayer = new BingTileLayer('sv')
 
 const petalMapsLayer = L.tileLayer("https://maprastertile-drcn.dbankcdn.cn/display-service/v1/online-render/getTile/24.12.10.10/{z}/{x}/{y}/?language=zh&p=46&scale=2&mapType=ROADMAP&presetStyleId=standard&pattern=JPG&key=DAEDANitav6P7Q0lWzCzKkLErbrJG4kS1u%2FCpEe5ZyxW5u0nSkb40bJ%2BYAugRN03fhf0BszLS1rCrzAogRHDZkxaMrloaHPQGO6LNg==",
-  {maxZoom:20}
+  { maxZoom: 20 }
 )
 
-const baiduCoverageLayer=new BaiduTileLayer({filter:"hue-rotate(140deg) saturate(200%)"})
+const baiduCoverageLayer = new BaiduLayer({ filter: "hue-rotate(140deg) saturate(200%)" })
 
-const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"], minNativeZoom:3, minZoom:1 })
+const yandexCoverageLayer = new YandexLayer()
+
+const kakaoCoverageLayer = new KakaoLayer()
+
+const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"], minNativeZoom: 3, minZoom: 1 })
 
 const baseMaps = {
   "Google Roadmap": roadmapLayer,
@@ -139,10 +145,11 @@ const overlayMaps = {
   'Google Street View Roads (Only Works at Zoom Level 12+)': gsvLayer3,
   'Google Unofficial coverage only': gsvLayer4,
   'Bing Streetside': bingStreetideLayer,
+  'Yandex Panorama': yandexCoverageLayer,
   'Baidu Street View': baiduCoverageLayer,
 }
 
-const allLayers= [
+const allLayers = [
   ...Object.values(baseMaps),
   ...Object.values(overlayMaps)
 ]
@@ -320,7 +327,7 @@ function toggleMap(provider: string) {
     baiduCoverageLayer.addTo(map)
   }
   else if (provider === 'yandex') {
-
+    yandexCoverageLayer.addTo(map)
   }
 }
 
