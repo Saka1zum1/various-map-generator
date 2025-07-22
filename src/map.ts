@@ -19,6 +19,7 @@ import { ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { settings } from '@/settings'
 import { isValidGeoJSON, getPolygonName, readFileAsText } from '@/composables/utils.ts'
+import { BaiduTileLayer } from './baiduTileLayer'
 
 import { useStore } from '@/store'
 const { selected, select, state } = useStore()
@@ -114,15 +115,22 @@ class BingTileLayer extends L.TileLayer {
 const bingBaseLayer = new BingTileLayer('r')
 const bingStreetideLayer = new BingTileLayer('sv')
 
-const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"] })
+const petalMapsLayer = L.tileLayer("https://maprastertile-drcn.dbankcdn.cn/display-service/v1/online-render/getTile/24.12.10.10/{z}/{x}/{y}/?language=zh&p=46&scale=2&mapType=ROADMAP&presetStyleId=standard&pattern=JPG&key=DAEDANitav6P7Q0lWzCzKkLErbrJG4kS1u%2FCpEe5ZyxW5u0nSkb40bJ%2BYAugRN03fhf0BszLS1rCrzAogRHDZkxaMrloaHPQGO6LNg==",
+  {maxZoom:20}
+)
+
+const baiduCoverageLayer=new BaiduTileLayer({filter:"hue-rotate(140deg) saturate(200%)"})
+
+const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"], minNativeZoom:3, minZoom:1 })
 
 const baseMaps = {
-  Roadmap: roadmapLayer,
-  Satellite: satelliteLayer,
-  Terrain: terrainLayer,
+  "Google Roadmap": roadmapLayer,
+  "Google Satellite": satelliteLayer,
+  "Google Terrain": terrainLayer,
   OSM: osmLayer,
   Bing: bingBaseLayer,
   Tencent: tencentBaseLayer,
+  Petal: petalMapsLayer,
 }
 
 const overlayMaps = {
@@ -130,21 +138,13 @@ const overlayMaps = {
   'Google Street View Official Only': gsvLayer2,
   'Google Street View Roads (Only Works at Zoom Level 12+)': gsvLayer3,
   'Google Unofficial coverage only': gsvLayer4,
-  'Bing Streetside': bingStreetideLayer
+  'Bing Streetside': bingStreetideLayer,
+  'Baidu Street View': baiduCoverageLayer,
 }
 
-const allLayers = [
-  roadmapLayer,
-  satelliteLayer,
-  terrainLayer,
-  osmLayer,
-  bingBaseLayer,
-  tencentBaseLayer,
-  gsvLayer,
-  gsvLayer2,
-  gsvLayer3,
-  gsvLayer4,
-  bingStreetideLayer
+const allLayers= [
+  ...Object.values(baseMaps),
+  ...Object.values(overlayMaps)
 ]
 
 const drawnPolygonsLayer = new L.GeoJSON()
@@ -315,7 +315,9 @@ function toggleMap(provider: string) {
     tencentBaseLayer.addTo(map)
   }
   else if (provider === 'baidu') {
-
+    resetLayer()
+    petalMapsLayer.addTo(map)
+    baiduCoverageLayer.addTo(map)
   }
   else if (provider === 'yandex') {
 
@@ -358,7 +360,7 @@ const storedLayers = useStorage<{
   base: BaseMapName
   overlays: OverlayMapName[]
 }>('map_generator__layers', {
-  base: 'Roadmap',
+  base: 'Google Roadmap',
   overlays: ['Google Street View Official Only'],
 })
 
