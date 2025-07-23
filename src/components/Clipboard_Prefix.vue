@@ -8,13 +8,13 @@
     @click="handleCopy"
   >
     <ClipboardCheckedIcon v-if="copied" class="w-5 h-5" />
-    <ClipboardIcon v-else class="w-5 h-5" />
+    <ClipboardPrefixIcon v-else class="w-5 h-5" />
   </Button>
 </template>
 
 <script setup lang="ts">
 import Button from './Elements/Button.vue'
-import ClipboardIcon from '@/assets/icons/clipboard.svg'
+import ClipboardPrefixIcon from '@/assets/icons/clipboard-prefix.svg'
 import ClipboardCheckedIcon from '@/assets/icons/clipboard-checked.svg'
 import { useClipboard } from '@vueuse/core'
 const { copy, copied, isSupported } = useClipboard()
