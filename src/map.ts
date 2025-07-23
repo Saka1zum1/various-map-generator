@@ -19,9 +19,9 @@ import { ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import { settings } from '@/settings'
 import { isValidGeoJSON, getPolygonName, readFileAsText } from '@/composables/utils.ts'
-import { BaiduLayer } from './baiduLayer'
-import { YandexLayer } from './yandexLayer'
-import { KakaoLayer } from './kakaoLayer'
+import { BaiduLayer } from './layers/baiduLayer'
+import { bingBaseLayer, bingStreetideLayer } from './layers/bingLayer'
+import { YandexLayer } from './layers/yandexLayer'
 
 import { useStore } from '@/store'
 const { selected, select, state } = useStore()
@@ -62,6 +62,12 @@ const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 })
 
+const petalMapsLayer = L.tileLayer("https://maprastertile-drcn.dbankcdn.cn/display-service/v1/online-render/getTile/24.12.10.10/{z}/{x}/{y}/?language=en&p=46&scale=2&mapType=ROADMAP&presetStyleId=standard&pattern=JPG&key=DAEDANitav6P7Q0lWzCzKkLErbrJG4kS1u%2FCpEe5ZyxW5u0nSkb40bJ%2BYAugRN03fhf0BszLS1rCrzAogRHDZkxaMrloaHPQGO6LNg==",
+  { maxZoom: 20 }
+)
+
+const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"], minNativeZoom: 3, minZoom: 1 })
+
 const gsvLayer = L.tileLayer(
   'https://www.google.com/maps/vt?pb=!1m7!8m6!1m3!1i{z}!2i{x}!3i{y}!2i9!3x1!2m8!1e2!2ssvv!4m2!1scc!2s*211m3*211e2*212b1*213e2*211m3*211e3*212b1*213e2*212b1*214b1!4m2!1ssvl!2s*211b0*212b1!3m8!2sen!3sus!5e1105!12m4!1e68!2m2!1sset!2sRoadmap!4e0!5m4!1e0!8m2!1e1!1e1!6m6!1e12!2i2!11e0!39b0!44e0!50e0',
   { maxZoom: 20 }
@@ -79,55 +85,12 @@ const gsvLayer4 = L.tileLayer(
   { maxZoom: 20 }
 )
 
-function tileXYToQuadKey(x: number, y: number, zoom: number): string {
-  let quadKey = '';
-  for (let i = zoom; i > 0; i--) {
-    let digit = 0;
-    const mask = 1 << (i - 1);
-    if ((x & mask) !== 0) digit += 1;
-    if ((y & mask) !== 0) digit += 2;
-    quadKey += digit.toString();
-  }
-  return quadKey;
-}
-
-class BingTileLayer extends L.TileLayer {
-  private layer: string;
-
-  constructor(layer: string) {
-    super('', {
-      tileSize: 256,
-      maxZoom: 20,
-      attribution: '',
-    });
-    this.layer = layer;
-  }
-
-  override getTileUrl(coords: L.Coords): string {
-    const quadKey = tileXYToQuadKey(coords.x, coords.y, coords.z);
-    if (this.layer === 'sv') {
-      return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?it=Z,HC`;
-    }
-    else {
-      return `https://t.ssl.ak.dynamic.tiles.virtualearth.net/comp/ch/${quadKey}?mkt=en-us&ur=cn&it=G,LC,L&jp=1&og=2618&sv=9.33&n=t&dre=1&o=webp,95&cstl=s23&st=bld|v:0`;
-    }
-  }
-}
-
-const bingBaseLayer = new BingTileLayer('r')
-const bingStreetideLayer = new BingTileLayer('sv')
-
-const petalMapsLayer = L.tileLayer("https://maprastertile-drcn.dbankcdn.cn/display-service/v1/online-render/getTile/24.12.10.10/{z}/{x}/{y}/?language=zh&p=46&scale=2&mapType=ROADMAP&presetStyleId=standard&pattern=JPG&key=DAEDANitav6P7Q0lWzCzKkLErbrJG4kS1u%2FCpEe5ZyxW5u0nSkb40bJ%2BYAugRN03fhf0BszLS1rCrzAogRHDZkxaMrloaHPQGO6LNg==",
-  { maxZoom: 20 }
-)
+const appleCoverageLayer = L.tileLayer('https://lookmap.eu.pythonanywhere.com/bluelines_raster_2x/{z}/{x}/{y}.png', { minZoom: 1, maxZoom: 7 })
 
 const baiduCoverageLayer = new BaiduLayer({ filter: "hue-rotate(140deg) saturate(200%)" })
 
 const yandexCoverageLayer = new YandexLayer()
 
-const kakaoCoverageLayer = new KakaoLayer()
-
-const tencentBaseLayer = L.tileLayer("http://rt{s}.map.gtimg.com/realtimerender?z={z}&x={x}&y={-y}&type=vector", { subdomains: ["0", "1", "2", "3"], minNativeZoom: 3, minZoom: 1 })
 
 const baseMaps = {
   "Google Roadmap": roadmapLayer,
@@ -144,6 +107,7 @@ const overlayMaps = {
   'Google Street View Official Only': gsvLayer2,
   'Google Street View Roads (Only Works at Zoom Level 12+)': gsvLayer3,
   'Google Unofficial coverage only': gsvLayer4,
+  'Apple Look Around': appleCoverageLayer,
   'Bing Streetside': bingStreetideLayer,
   'Yandex Panorama': yandexCoverageLayer,
   'Baidu Street View': baiduCoverageLayer,
@@ -310,7 +274,10 @@ function toggleMap(provider: string) {
   if (provider === 'google') {
     resetLayer()
     roadmapLayer.addTo(map)
-    gsvLayer.addTo(map)
+    gsvLayer2.addTo(map)
+  }
+  else if (provider === 'apple') {
+    appleCoverageLayer.addTo(map)
   }
   else if (provider === 'bing') {
     resetLayer()

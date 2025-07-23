@@ -70,6 +70,7 @@
 
             <div class="flex gap-1">
               <Clipboard :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
+              <Clipboard_Prefix :data="[polygon as Polygon]" :disabled="!polygon.found.length" :prefix="settings.provider"/>
               <ExportToJSON :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
               <ExportToCSV :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
               <Button size="sm" squared variant="danger" :disabled="!polygon.found.length"
@@ -90,6 +91,7 @@
         </Button>
         <div class="flex gap-1">
           <Clipboard :data="selected as Polygon[]" :disabled="!totalLocs" />
+          <Clipboard_Prefix :data="selected as Polygon[]" :disabled="!totalLocs" :prefix="settings.provider"/>
           <ExportToJSON :data="selected as Polygon[]" :disabled="!totalLocs" />
           <ExportToCSV :data="selected as Polygon[]" :disabled="!totalLocs" />
           <Button size="sm" squared variant="danger" :disabled="!totalLocs" title="Delete all locations"
@@ -571,6 +573,7 @@ import {
   tencentToGcj02
 } from '@/composables/utils.ts'
 import StreetViewProviders from './providers'
+import Clipboard_Prefix from './components/Clipboard_Prefix.vue'
 const { currentDate } = getCurrentDate()
 
 /*watch(
