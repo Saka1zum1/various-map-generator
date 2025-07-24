@@ -5,4 +5,8 @@ declare namespace google.maps {
       [key?: string]: Date
     }[]
   }
+
+  interface StreetViewLocation {
+    altitude?: number | null;
+  }
 }
