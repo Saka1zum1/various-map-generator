@@ -60,6 +60,7 @@ async function getFromApple(
                 pano: apple.panoId,
                 latLng: new google.maps.LatLng(apple.lat, apple.lng),
                 description: apple.coverage_type == 3 ? "backpack" : (apple.camera_type),
+                altitude: apple.altitude
             },
             links: [],
             tiles: {
@@ -289,7 +290,8 @@ async function getFromBing(
             location: {
                 pano: panoId,
                 latLng: new google.maps.LatLng(result.la, result.lo),
-                description: ""
+                description: "",
+                altitude: result.al
             },
             links: [],
             tiles: {
@@ -430,7 +432,8 @@ async function getFromBaidu(
             location: {
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
-                description: result.Rname
+                description: result.Rname,
+                altitude: result.Z
             },
             links: result.Links?.map((r: any) => ({
                 pano: r.PID,

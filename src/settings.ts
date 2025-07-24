@@ -56,7 +56,7 @@ const defaultSettings = {
   checkAllDates: false,
   randomInTimeline: false,
 
-  findByMinutes: {
+  filterByMinutes: {
     enabled: false,
     range: [0, 1439],
   },
@@ -280,6 +280,12 @@ const defaultSettings = {
     enabled: false,
     range: [1, 5],
   },
+  
+  filterByAltitude: {
+    enabled: false,
+    range: [0, 1000],
+  },
+
   getCurve: false,
   minCurveAngle: 10,
 
@@ -311,7 +317,7 @@ const defaultSettings = {
   checkImports: false,
 }
 
-const storedSettings = useStorage('map_generator__settings_v12', defaultSettings)
+const storedSettings = useStorage('map_generator__settings_v13', defaultSettings)
 const settings = reactive(storedSettings.value)
 settings.toDate = currentDate
 settings.toYear = currentYear

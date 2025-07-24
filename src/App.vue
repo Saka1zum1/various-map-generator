@@ -70,7 +70,8 @@
 
             <div class="flex gap-1">
               <Clipboard :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
-              <Clipboard_Prefix :data="[polygon as Polygon]" :disabled="!polygon.found.length" :prefix="settings.provider"/>
+              <Clipboard_Prefix :data="[polygon as Polygon]" :disabled="!polygon.found.length"
+                :prefix="settings.provider" />
               <ExportToJSON :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
               <ExportToCSV :data="[polygon as Polygon]" :disabled="!polygon.found.length" />
               <Button size="sm" squared variant="danger" :disabled="!polygon.found.length"
@@ -91,7 +92,7 @@
         </Button>
         <div class="flex gap-1">
           <Clipboard :data="selected as Polygon[]" :disabled="!totalLocs" />
-          <Clipboard_Prefix :data="selected as Polygon[]" :disabled="!totalLocs" :prefix="settings.provider"/>
+          <Clipboard_Prefix :data="selected as Polygon[]" :disabled="!totalLocs" :prefix="settings.provider" />
           <ExportToJSON :data="selected as Polygon[]" :disabled="!totalLocs" />
           <ExportToCSV :data="selected as Polygon[]" :disabled="!totalLocs" />
           <Button size="sm" squared variant="danger" :disabled="!totalLocs" title="Delete all locations"
@@ -181,8 +182,7 @@
 
               <Checkbox v-model="settings.rejectDescription">Find trekker coverage</Checkbox>
 
-              <Checkbox v-model="settings.findNightCoverage"
-                v-if="settings.provider === 'tencent'">
+              <Checkbox v-model="settings.findNightCoverage" v-if="settings.provider === 'tencent'">
                 Find night coverage
               </Checkbox>
 
@@ -271,19 +271,19 @@
             </div>
 
             <div v-if="settings.provider != 'google'" class="flex items-center">
-              <Checkbox v-model="settings.findByMinutes.enabled">Filter by minutes</Checkbox>
-              <Slider v-if="settings.findByMinutes.enabled" v-model="settings.findByMinutes.range" :min="0" :max="1439"
-                :step="5" :showTooltip="'focus'" :range="true" class="w-48 ml-2" :format="val => {
+              <Checkbox v-model="settings.filterByMinutes.enabled">Filter by minutes</Checkbox>
+              <Slider v-if="settings.filterByMinutes.enabled" v-model="settings.filterByMinutes.range" :min="0"
+                :max="1439" :step="5" :showTooltip="'focus'" :range="true" class="w-48 ml-2" :format="val => {
                   const h = Math.floor(val / 60).toString().padStart(2, '0')
                   const m = Math.floor(val % 60).toString().padStart(2, '0')
                   return `${h}:${m}`
                 }" />
-              <span v-if="settings.findByMinutes.enabled" class="ml-2">
-                {{ Math.floor(settings.findByMinutes.range[0] / 60).toString().padStart(2, '0') }}:{{
-                  (settings.findByMinutes.range[0] % 60).toString().padStart(2, '0') }}
+              <span v-if="settings.filterByMinutes.enabled" class="ml-2">
+                {{ Math.floor(settings.filterByMinutes.range[0] / 60).toString().padStart(2, '0') }}:{{
+                  (settings.filterByMinutes.range[0] % 60).toString().padStart(2, '0') }}
                 -
-                {{ Math.floor(settings.findByMinutes.range[1] / 60).toString().padStart(2, '0') }}:{{
-                  (settings.findByMinutes.range[1] % 60).toString().padStart(2, '0') }}
+                {{ Math.floor(settings.filterByMinutes.range[1] / 60).toString().padStart(2, '0') }}:{{
+                  (settings.filterByMinutes.range[1] % 60).toString().padStart(2, '0') }}
               </span>
             </div>
 
@@ -413,6 +413,20 @@
               </label>
             </div>
 
+            <Checkbox v-if="['apple', 'bing', 'baidu'].includes(settings.provider)"
+              v-model="settings.filterByAltitude.enabled">
+              Filter by altitude</Checkbox>
+            <div v-if="settings.filterByAltitude.enabled" class="ml-6">
+              <label class="flex items-center justify-between">
+                <div class="flex items-center gap-1 relative">
+                  Meters
+                </div>
+                <Slider v-if="settings.filterByAltitude.enabled" v-model="settings.filterByAltitude.range" :min="-200"
+                  :max="8848" :step="10" :showTooltip="'always'" :range="true" :format="val => `${Math.round(val)}m`"
+                  tooltipPosition="bottom" class="w-40 pr-2" />
+              </label>
+            </div>
+
             <Checkbox v-model="settings.getCurve"> Find curve locations </Checkbox>
 
             <label v-if="settings.getCurve" class="ml-6 flex items-center justify-between">
@@ -471,7 +485,8 @@
         </div>
 
         <Collapsible :is-open="panels.marker" class="p-1">
-          <Checkbox v-model="settings.markers.noBlueLine" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('noBlueLine')">
+          <Checkbox v-model="settings.markers.noBlueLine" v-if="settings.provider == 'google'"
+            v-on:change="updateMarkerLayers('noBlueLine')">
             <span class="h-3 w-3 bg-[#E412D2] rounded-full"></span>No blue line
           </Checkbox>
           <Checkbox v-model="settings.markers.newRoad" v-on:change="updateMarkerLayers('newRoad')">
@@ -481,10 +496,12 @@
             <span class="h-3 w-3 bg-[#2880CA] rounded-full"></span>
             {{ settings.provider !== 'google' ? 'Update' : 'Gen 4 Update' }}
           </Checkbox>
-          <Checkbox v-model="settings.markers.gen2Or3" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('gen2Or3')">
+          <Checkbox v-model="settings.markers.gen2Or3" v-if="settings.provider == 'google'"
+            v-on:change="updateMarkerLayers('gen2Or3')">
             <span class="h-3 w-3 bg-[#9A28CA] rounded-full"></span>Gen 2 or 3 Update
           </Checkbox>
-          <Checkbox v-model="settings.markers.gen1" v-if="settings.provider == 'google'" v-on:change="updateMarkerLayers('gen1')">
+          <Checkbox v-model="settings.markers.gen1" v-if="settings.provider == 'google'"
+            v-on:change="updateMarkerLayers('gen1')">
             <span class="h-3 w-3 bg-[#24AC20] rounded-full"></span>Gen 1 Update
           </Checkbox>
           <Checkbox v-model="settings.markers.cluster" v-on:change="updateClusters" title="For lag reduction.">
@@ -788,15 +805,15 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
     }
 
     if (
-      settings.findByMinutes.enabled && settings.provider != 'google'
+      settings.filterByMinutes.enabled && settings.provider != 'google'
     ) {
       var panoMinutes
       switch (settings.provider) {
         case 'baidu':
-          panoMinutes = Number(res.location.pano.slice(16, 18))*60 + Number(res.location.pano.slice(18, 20))
+          panoMinutes = Number(res.location.pano.slice(16, 18)) * 60 + Number(res.location.pano.slice(18, 20))
           break
         case 'tencent':
-          panoMinutes = Number(res.location.pano.slice(14, 16))*60 + Number(res.location.pano.slice(16, 18))
+          panoMinutes = Number(res.location.pano.slice(14, 16)) * 60 + Number(res.location.pano.slice(16, 18))
           if (
             res.location.shortDescription &&
             res.location.pano == res.location.shortDescription) panoMinutes += 1200
@@ -805,11 +822,11 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
         case 'bing':
         case 'yandex':
         case 'kakao':
-          panoMinutes = Number(res.imageDate.slice(11,13))*60 + Number(res.imageDate.slice(14,16))
+          panoMinutes = Number(res.imageDate.slice(11, 13)) * 60 + Number(res.imageDate.slice(14, 16))
           break
       }
 
-      if (panoMinutes < settings.findByMinutes.range[0] || panoMinutes > settings.findByMinutes.range[1]) return false
+      if (panoMinutes < settings.filterByMinutes.range[0] || panoMinutes > settings.filterByMinutes.range[1]) return false
     }
 
     if (settings.randomInTimeline && res.time) {
@@ -886,6 +903,15 @@ async function isPanoGood(pano: google.maps.StreetViewPanoramaData) {
         links.length > settings.filterByLinksLength.range[1]
       )
         return
+    }
+
+    if (settings.filterByAltitude.enabled) {
+
+      if (
+        pano.location.altitude < settings.filterByAltitude.range[0] ||
+        pano.location.altitude > settings.filterByAltitude.range[1]
+      )
+        return false
     }
 
     if (settings.getCurve) {
@@ -1126,8 +1152,8 @@ function addLoc(pano: google.maps.StreetViewPanoramaData, polygon: Polygon) {
   // New road
   if (!previousPano) {
     checkHasBlueLine(pano.location.latLng.toJSON()).then((hasBlueLine) => {
-      addLocation(location, polygon, 
-      settings.provider != 'google'? icons.newLoc : (hasBlueLine ? icons.newLoc : icons.noBlueLine))
+      addLocation(location, polygon,
+        settings.provider != 'google' ? icons.newLoc : (hasBlueLine ? icons.newLoc : icons.noBlueLine))
     })
   } else {
     StreetViewProviders.getPanorama(settings.provider, { pano: previousPano }, (previousPano) => {

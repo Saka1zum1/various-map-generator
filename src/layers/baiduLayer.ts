@@ -61,7 +61,6 @@ async function renderTile(
         (vertTileOffset + 1 - (bottomRightTile[1] - Math.floor(bottomRightTile[1]))) * TILE_SIZE
     ];
 
-    console.log([topLeftTile, bottomRightTile])
     const helper = new OffscreenCanvas(
         TILE_SIZE * (horzTileOffset + 1),
         TILE_SIZE * (vertTileOffset + 1)
