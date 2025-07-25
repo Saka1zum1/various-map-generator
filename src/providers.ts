@@ -426,7 +426,7 @@ async function getFromBaidu(
             return
         }
 
-        const date = extractDateFromPanoId(result.Date)
+        const date = extractDateFromPanoId(panoId.slice(10, 22))
         const [lng, lat] = gcoord.transform([result.X / 100, result.Y / 100], gcoord.BD09MC, gcoord.WGS84);
         const panorama: google.maps.StreetViewPanoramaData = {
             location: {

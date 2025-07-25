@@ -525,7 +525,7 @@
 <script setup lang="ts">
 // @ts-nocheck
 import { onMounted, watch, computed } from 'vue'
-import { useStorage } from '@vueuse/core'
+import { formatDate, useStorage } from '@vueuse/core'
 import booleanPointInPolygon from '@turf/boolean-point-in-polygon'
 import { llToPX } from 'web-merc-projection'
 
@@ -849,7 +849,7 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       !settings.randomInTimeline
     ) {
       if (!res.time?.length) return false
-
+console.log('a')
       const fromDate = Date.parse(settings.fromDate)
       const toDate = Date.parse(settings.toDate)
       let dateWithin = false
@@ -867,7 +867,6 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       if (!dateWithin) return false
     } else {
       if (settings.rejectDateless && !res.imageDate) return false
-
       if (
         res.imageDate &&
         (Date.parse(res.imageDate) < Date.parse(settings.fromDate) ||
