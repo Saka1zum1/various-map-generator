@@ -19,6 +19,7 @@
     "gcoord": "^1.0.7",
     "leaflet": "^1.9.4",
     "leaflet-contextmenu": "^1.4.0",
+    "leaflet-vector-tile-layer": "^0.16.1",
     "leaflet.markercluster": "^1.5.3",
     "leaflet.markercluster.freezable": "^1.0.0",
     "protobufjs": "^7.5.3",

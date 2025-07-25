@@ -22,6 +22,7 @@ import { isValidGeoJSON, getPolygonName, readFileAsText } from '@/composables/ut
 import { BaiduLayer } from './layers/baiduLayer'
 import { bingBaseLayer, bingStreetideLayer } from './layers/bingLayer'
 import { YandexLayer } from './layers/yandexLayer'
+import { AppleLayer } from './layers/appleLayer'
 
 import { useStore } from '@/store'
 const { selected, select, state } = useStore()
@@ -108,6 +109,7 @@ const overlayMaps = {
   'Google Street View Roads (Only Works at Zoom Level 12+)': gsvLayer3,
   'Google Unofficial coverage only': gsvLayer4,
   'Apple Look Around': appleCoverageLayer,
+  'Apple Look Around (Only Works at Zoom Level 7+)':AppleLayer,
   'Bing Streetside': bingStreetideLayer,
   'Yandex Panorama': yandexCoverageLayer,
   'Baidu Street View': baiduCoverageLayer,
@@ -278,6 +280,7 @@ function toggleMap(provider: string) {
   }
   else if (provider === 'apple') {
     appleCoverageLayer.addTo(map)
+    AppleLayer.addTo(map)
   }
   else if (provider === 'bing') {
     resetLayer()
