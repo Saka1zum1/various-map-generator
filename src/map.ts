@@ -374,6 +374,12 @@ const availableLayers = ref<LayerMeta[]>([
     visible: true,
   },
   {
+    label: 'China Borders',
+    key: 'china_borders',
+    source: '/geojson/china_borders.json',
+    visible: false,
+  },
+  {
     label: 'Drawn polygons',
     key: 'drawn_polygons',
     source: drawnPolygonsLayer,
