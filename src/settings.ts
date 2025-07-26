@@ -21,6 +21,8 @@ const defaultSettings = {
     enabled: true,
     generation: {
       1: false,
+      2: true,
+      3: true,
       badcam:true,
       23: true,
       4: true,

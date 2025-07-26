@@ -213,6 +213,8 @@
                 generation</Checkbox>
               <div v-if="settings.findByGeneration.enabled && settings.provider === 'google'" class="ml-6">
                 <Checkbox v-model="settings.findByGeneration.generation[1]">Gen 1</Checkbox>
+                <Checkbox v-model="settings.findByGeneration.generation[2]">Gen 2</Checkbox>
+                <Checkbox v-model="settings.findByGeneration.generation[3]">Gen 3</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[23]">Gen 2 & 3</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[4]">Gen 4</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation.badcam">BadCam</Checkbox>

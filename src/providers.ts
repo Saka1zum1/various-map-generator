@@ -20,12 +20,12 @@ function parseGoogle(data: any): google.maps.StreetViewPanoramaData {
         let country = null;
         let desc_raw = null;
         let shortDesc_raw = null;
+
         const panoId = data[1][0][1][1];
         const lat = data[1][0][5][0][1][0][2];
         const lng = data[1][0][5][0][1][0][3];
         const heading = data[1][0][5][0][1][2][0];
         const worldsize = data[1][0][2][2];
-
 
         const imageYear = data[1][0][6][7][0];
         const imageMonth = data[1][0][6][7][1];
@@ -59,15 +59,14 @@ function parseGoogle(data: any): google.maps.StreetViewPanoramaData {
             date: new Date(`${node[1][0]}-${String(node[1][1]).padStart(2, '0')}-01`),
         })))
             : [];
-
         const panorama: google.maps.StreetViewPanoramaData = {
             location: {
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
                 description: !desc_raw && !shortDesc_raw ? null : `${shortDesc_raw}, ${desc_raw}`,
                 shortDescription: shortDesc_raw,
-                altitude: altitude,
-                country: country
+                altitude,
+                country
             },
             links: linksRaw.map((link: any) => ({
                 pano: link[0][1],
@@ -130,7 +129,7 @@ async function getFromGoogle(
     ) => void,
 ) {
     const sv = getStreetViewService()
-    if ('pano' in request && typeof request.pano === 'string' && request.pano.length == 27) {
+    if ('pano' in request && typeof request.pano === 'string' && request.pano.length == 22) {
         try {
             const result = await getMetadata(request.pano)
             if (result.length > 1) onCompleted(parseGoogle(result), google.maps.StreetViewStatus.OK)

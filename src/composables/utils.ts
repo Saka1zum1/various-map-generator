@@ -57,6 +57,9 @@ export function getCameraGeneration(pano: google.maps.StreetViewPanoramaData) {
     'BD': '2021-04', 'EC': '2022-03', 'FI': '2020-09', 'IN': '2021-10', 'LK': '2021-02', 'KH': '2022-10',
     'LB': '2021-05', 'NG': '2021-06', 'ST': '2024-02', 'US': '2019-01', 'VN': '2021-01', 'ES': '2023-01'
   };
+  const gen2Countries = new Set(['AU', 'BR', 'CA', 'CL', 'JP', 'GB', 'IE', 'NZ', 'MX', 'RU', 'US', 'IT', 'DK', 'GR', 'RO',
+    'PL', 'CZ', 'CH', 'SE', 'FI', 'BE', 'LU', 'NL', 'ZA', 'SG', 'TW', 'HK', 'MO', 'MC', 'SM',
+    'AD', 'IM', 'JE', 'FR', 'DE', 'ES', 'PT', 'SJ']);
   const country = pano.location?.country ?? 'None'
   const targetDate = country in gen3Dates ? gen3Dates[country] : '9999-99'
   const { lat, lng }: any = pano.location?.latLng
@@ -66,12 +69,17 @@ export function getCameraGeneration(pano: google.maps.StreetViewPanoramaData) {
       return 1
     case 6656:
       if (country && pano.imageDate) {
+        console.log(country, pano.imageDate)
         if (pano.imageDate >= targetDate) {
           if (pano.location?.country != 'US') return 'badcam'
           if (pano.location?.country === 'US' && lat > 52) return 'badcam'
         }
+
+        if (gen2Countries.has(country) && pano.imageDate <= '2011-11') {
+          return pano.imageDate >= '2010-09' ? 23 : 2;
+        }
       }
-      return 23
+      return 3
     case 8192:
       return 4
     default:
@@ -84,7 +92,7 @@ export function createPayload(
 ): string {
   let payload: any;
   let pano_type: number = 2;
-  if (pano.slice(0, 4) == 'CIHM' || pano.length!=27) pano_type = 10
+  if (pano.slice(0, 4) == 'CIHM' || pano.length != 22) pano_type = 10
   payload = [
     ["apiv3", null, null, null, "US", null, null, null, null, null, [[0]]],
     ["en", "US"],
