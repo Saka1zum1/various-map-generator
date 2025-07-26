@@ -53,17 +53,46 @@ export function isAcceptableCurve(
 }
 
 export function getCameraGeneration(pano: google.maps.StreetViewPanoramaData) {
+  const gen3Dates: any = {
+    'BD': '2021-04', 'EC': '2022-03', 'FI': '2020-09', 'IN': '2021-10', 'LK': '2021-02', 'KH': '2022-10',
+    'LB': '2021-05', 'NG': '2021-06', 'ST': '2024-02', 'US': '2019-01', 'VN': '2021-01', 'ES': '2023-01'
+  };
+  const country = pano.location?.country ?? 'None'
+  const targetDate = country in gen3Dates ? gen3Dates[country] : '9999-99'
+  const { lat, lng }: any = pano.location?.latLng
   const { worldSize } = pano.tiles
   switch (worldSize.height) {
     case 1664:
       return 1
     case 6656:
+      if (country && pano.imageDate) {
+        if (pano.imageDate >= targetDate) {
+          if (pano.location?.country != 'US') return 'badcam'
+          if (pano.location?.country === 'US' && lat > 52) return 'badcam'
+        }
+      }
       return 23
     case 8192:
       return 4
     default:
       return 0
   }
+}
+
+export function createPayload(
+  pano: string
+): string {
+  let payload: any;
+  let pano_type: number = 2;
+  if (pano.slice(0, 4) == 'CIHM') pano_type = 10
+  payload = [
+    ["apiv3", null, null, null, "US", null, null, null, null, null, [[0]]],
+    ["en", "US"],
+    [[[pano_type, pano]]],
+    [[1, 2, 3, 4, 8, 6]]
+  ];
+
+  return JSON.stringify(payload);
 }
 
 function normalizeText(text: string) {

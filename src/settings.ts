@@ -6,6 +6,7 @@ const { currentYear, currentDate } = getCurrentDate()
 
 const defaultSettings = {
   numOfGenerators: 1,
+  speed:100,
   radius: 500,
   oneCountryAtATime: false,
   onlyCheckBlueLines: false,
@@ -20,6 +21,7 @@ const defaultSettings = {
     enabled: true,
     generation: {
       1: false,
+      badcam:true,
       23: true,
       4: true,
     },
@@ -317,7 +319,7 @@ const defaultSettings = {
   checkImports: false,
 }
 
-const storedSettings = useStorage('map_generator__settings_v13', defaultSettings)
+const storedSettings = useStorage('map_generator__settings_v14', defaultSettings)
 const settings = reactive(storedSettings.value)
 settings.toDate = currentDate
 settings.toYear = currentYear

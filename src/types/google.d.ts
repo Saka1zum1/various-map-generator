@@ -8,5 +8,6 @@ declare namespace google.maps {
 
   interface StreetViewLocation {
     altitude?: number | null;
+    country?: string | null;
   }
 }

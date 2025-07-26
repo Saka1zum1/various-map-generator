@@ -1,6 +1,7 @@
 import { extractDateFromPanoId, formatTimeStr } from '@/composables/utils'
 import { getClosestPanoAtCoords } from "@/apple/tile";
 import { AppleLookAroundPano } from "@/apple/types";
+import { createPayload } from '@/composables/utils';
 import gcoord from 'gcoord'
 
 let svService: google.maps.StreetViewService | null = null
@@ -13,16 +14,136 @@ function getStreetViewService() {
     return svService
 }
 
+function parseGoogle(data: any): google.maps.StreetViewPanoramaData {
+    try {
+        let roadName = null;
+        let country = null;
+        let desc_raw = null;
+        let shortDesc_raw = null;
+        const panoId = data[1][0][1][1];
+        const lat = data[1][0][5][0][1][0][2];
+        const lng = data[1][0][5][0][1][0][3];
+        const heading = data[1][0][5][0][1][2][0];
+        const worldsize = data[1][0][2][2];
+
+
+        const imageYear = data[1][0][6][7][0];
+        const imageMonth = data[1][0][6][7][1];
+        const imageDate = `${imageYear}-${String(imageMonth).padStart(2, '0')}-01`;
+
+        const historyRaw = data[1][0][5][0][8];
+        const linksRaw = data[1][0][5][0][3][0];
+
+        const altitude = data[1][0][5][0][1][1][0]
+        try {
+            country = data[1][0][5][0][1][4];
+            if (['TW', 'HK', 'MO'].includes(country)) {
+                country = 'CN';
+            }
+        } catch (e) { }
+        try {
+            roadName = data[1][0][5][0][12][0][0][0][2][0];
+        } catch (e) { }
+        try {
+            desc_raw = data[1][0][3][2][1][0]
+        } catch (e) {
+            try { desc_raw = data[1][0][3][0][0] } catch (error) { }
+        }
+        try {
+            shortDesc_raw = data[1][0][3][2][0][0]
+        } catch (e) { try { shortDesc_raw = data[1][0][3][0][0] } catch (error) { } }
+
+        const history = historyRaw ? (historyRaw.map((node: any) => ({
+            pano: linksRaw[node[0]],
+            date: new Date(`${node[1][0]}-${String(node[1][1]).padStart(2, '0')}-01`),
+        })))
+            : [];
+
+        const panorama: google.maps.StreetViewPanoramaData = {
+            location: {
+                pano: panoId,
+                latLng: new google.maps.LatLng(lat, lng),
+                description: `${shortDesc_raw}, ${desc_raw}`,
+                shortDescription: shortDesc_raw,
+                altitude: altitude,
+                country: country
+            },
+            links: linksRaw.map((link: any) => ({
+                pano: link[0][1],
+                heading: link[2][2][0] ?? 0,
+            })) ?? [],
+            tiles: {
+                centerHeading: heading,
+                tileSize: new google.maps.Size(512, 512),
+                worldSize: new google.maps.Size(worldsize[1], worldsize[0]),
+                getTileUrl: () => '',
+            },
+            imageDate,
+            copyright: '© Google',
+            time: [...history, { pano: panoId, date: new Date(imageDate) }]
+                .sort((a, b) => a.date.getTime() - b.date.getTime()),
+        };
+
+        return panorama;
+    } catch (error: any) {
+        console.error('Failed to parse panorama data:', error.message);
+        throw new Error('Invalid panorama data format');
+    }
+}
+
+async function getMetadata(
+    pano: string,
+): Promise<any> {
+    try {
+        const endpoint = `https://maps.googleapis.com/$rpc/google.internal.maps.mapsjs.v1.MapsJsInternalService/GetMetadata`;
+        const payload = createPayload(pano);
+
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: {
+                "content-type": "application/json+protobuf",
+                "x-user-agent": "grpc-web-javascript/0.1"
+            },
+            body: payload,
+            mode: "cors",
+            credentials: "omit"
+        });
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return await response.json();
+    } catch (error: any) {
+        throw new Error(`Error fetching Google panorama: ${error.message}`);
+    }
+}
+
+
 // Google
 async function getFromGoogle(
-    request: google.maps.StreetViewLocationRequest,
+    request: google.maps.StreetViewLocationRequest | google.maps.StreetViewPanoRequest,
     onCompleted: (
         res: google.maps.StreetViewPanoramaData | null,
         status: google.maps.StreetViewStatus,
     ) => void,
 ) {
     const sv = getStreetViewService()
-    await sv.getPanorama(request, onCompleted)
+    if ('pano' in request && typeof request.pano === 'string') {
+        try {
+            const result = await getMetadata(request.pano)
+            if (result.length > 1) onCompleted(parseGoogle(result), google.maps.StreetViewStatus.OK)
+            else onCompleted(null, google.maps.StreetViewStatus.ZERO_RESULTS)
+        }
+        catch (error) {
+            console.error('Error fetching Google panorama:', error)
+            onCompleted(null, google.maps.StreetViewStatus.UNKNOWN_ERROR)
+        }
+    }
+    else {
+        await sv.getPanorama(request, onCompleted)
+    }
+
 }
 
 
@@ -205,7 +326,8 @@ async function getFromTencent(
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
                 description: result.basic.append_addr,
-                shortDescription: result.basic.mode === "night" ? panoId : (trans_svid || null)
+                shortDescription: result.basic.mode === "night" ? panoId : (trans_svid || null),
+                country: 'CN'
             },
             links: result.all_scenes?.map((r: any) => ({
                 pano: r.svid,
@@ -353,6 +475,7 @@ async function getFromKakao(
                 pano: panoId,
                 latLng: new google.maps.LatLng(result.wgsy, result.wgsx),
                 description: result.addr,
+                country: 'KR'
             },
             links: result.spot?.map((r: any) => ({
                 pano: r.id.toString(),
@@ -433,7 +556,8 @@ async function getFromBaidu(
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
                 description: result.Rname,
-                altitude: result.Z
+                altitude: result.Z,
+                country: 'CN'
             },
             links: result.Links?.map((r: any) => ({
                 pano: r.PID,

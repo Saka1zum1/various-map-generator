@@ -132,6 +132,14 @@
             </div>
           </div>
 
+          <div class="flex justify-between">
+            Speed:
+            <span>
+              <input type="number" v-model.number="settings.speed" min="1" max="1000" @change="handleSpeedInput" />
+              attemps
+            </span>
+          </div>
+
           <div class="flex items-center justify-between">
             Radius :
             <span>
@@ -207,6 +215,7 @@
                 <Checkbox v-model="settings.findByGeneration.generation[1]">Gen 1</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[23]">Gen 2 & 3</Checkbox>
                 <Checkbox v-model="settings.findByGeneration.generation[4]">Gen 4</Checkbox>
+                <Checkbox v-model="settings.findByGeneration.generation.badcam">BadCam</Checkbox>
               </div>
               <div v-if="settings.findByGeneration.enabled && settings.provider === 'apple'" class="ml-6">
                 <Checkbox v-model="settings.findByGeneration.apple.bigcam">Big Camera</Checkbox>
@@ -413,7 +422,7 @@
               </label>
             </div>
 
-            <Checkbox v-if="['apple', 'bing', 'baidu'].includes(settings.provider)"
+            <Checkbox v-if="['apple', 'bing', 'baidu', 'google'].includes(settings.provider)"
               v-model="settings.filterByAltitude.enabled">
               Filter by altitude</Checkbox>
             <div v-if="settings.filterByAltitude.enabled" class="ml-6">
@@ -689,7 +698,7 @@ async function generate(polygon: Polygon) {
     polygon.isProcessing = true
 
     const randomCoords = []
-    const n = Math.min(polygon.nbNeeded * 100, 1000)
+    const n = Math.min(polygon.nbNeeded * 100, settings.speed)
 
     while (randomCoords.length < n) {
       const point = randomPointInPoly(polygon)
@@ -774,22 +783,6 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       if (settings.findDrones && !isDrone(res)) return false
     }
 
-    if (
-      ['google', 'apple'].includes(settings.provider) &&
-      settings.findByGeneration.enabled &&
-      ((!settings.rejectOfficial && !settings.checkAllDates) || settings.selectMonths)
-    ) {
-      if (settings.provider === 'apple') {
-        const camera_type = res.location.description
-        if (!settings.findByGeneration.apple[camera_type]) return false
-      }
-      else {
-        const gen = getCameraGeneration(res)
-        if (gen === 0) return false
-        if (!settings.findByGeneration.generation[gen]) return false
-      }
-    }
-
     if (settings.findNightCoverage && settings.provider === 'tencent') {
       if (!res.location.shortDescription) return false
       return StreetViewProviders.getPanorama(
@@ -849,7 +842,6 @@ async function getLoc(loc: LatLng, polygon: Polygon) {
       !settings.randomInTimeline
     ) {
       if (!res.time?.length) return false
-console.log('a')
       const fromDate = Date.parse(settings.fromDate)
       const toDate = Date.parse(settings.toDate)
       let dateWithin = false
@@ -902,6 +894,23 @@ async function isPanoGood(pano: google.maps.StreetViewPanoramaData) {
         links.length > settings.filterByLinksLength.range[1]
       )
         return
+    }
+
+    // Find Generation
+    if (
+      ['google', 'apple'].includes(settings.provider) &&
+      settings.findByGeneration.enabled &&
+      ((!settings.rejectOfficial && !settings.checkAllDates) || settings.selectMonths)
+    ) {
+      if (settings.provider === 'apple') {
+        const camera_type = pano.location.description
+        if (!settings.findByGeneration.apple[camera_type]) return false
+      }
+      else {
+        const gen = getCameraGeneration(pano)
+        if (gen === 0) return false
+        if (!settings.findByGeneration.generation[gen]) return false
+      }
     }
 
     if (settings.filterByAltitude.enabled) {
@@ -1317,6 +1326,13 @@ async function changeLocationsCap() {
   for (const polygon of selected.value) {
     polygon.nbNeeded = newCap
   }
+}
+
+function handleSpeedInput(e: Event) {
+  const target = e.target as HTMLInputElement
+  const value = parseInt(target.value)
+  if (!value || value < 1) settings.speed = 1
+  else if (value > 1000) settings.speed = 1000
 }
 
 function handleRadiusInput(e: Event) {
