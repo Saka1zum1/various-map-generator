@@ -20,9 +20,10 @@ import { useStorage } from '@vueuse/core'
 import { settings } from '@/settings'
 import { isValidGeoJSON, getPolygonName, readFileAsText } from '@/composables/utils.ts'
 import { BaiduLayer } from './layers/baiduLayer'
-import { bingBaseLayer, bingStreetideLayer } from './layers/bingLayer'
+import { bingBaseLayer, bingTerrainLayer, bingStreetideLayer } from './layers/bingLayer'
 import { YandexLayer } from './layers/yandexLayer'
 import { AppleLayer } from './layers/appleLayer'
+import { TencentCoverageLayer } from './layers/tencentLayer'
 
 import { useStore } from '@/store'
 const { selected, select, state } = useStore()
@@ -63,6 +64,8 @@ const osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
 })
 
+const bingMapsLayer=L.layerGroup([bingBaseLayer, bingTerrainLayer])
+
 const petalMapsLayer = L.tileLayer("https://maprastertile-drcn.dbankcdn.cn/display-service/v1/online-render/getTile/24.12.10.10/{z}/{x}/{y}/?language=en&p=46&scale=2&mapType=ROADMAP&presetStyleId=standard&pattern=JPG&key=DAEDANitav6P7Q0lWzCzKkLErbrJG4kS1u%2FCpEe5ZyxW5u0nSkb40bJ%2BYAugRN03fhf0BszLS1rCrzAogRHDZkxaMrloaHPQGO6LNg==",
   { maxZoom: 20 }
 )
@@ -98,7 +101,7 @@ const baseMaps = {
   "Google Satellite": satelliteLayer,
   "Google Terrain": terrainLayer,
   OSM: osmLayer,
-  Bing: bingBaseLayer,
+  Bing: bingMapsLayer,
   Tencent: tencentBaseLayer,
   Petal: petalMapsLayer,
 }
@@ -112,6 +115,7 @@ const overlayMaps = {
   'Apple Look Around (Only Works at Zoom Level 7+)':AppleLayer,
   'Bing Streetside': bingStreetideLayer,
   'Yandex Panorama': yandexCoverageLayer,
+  'Tencent Street View': TencentCoverageLayer,
   'Baidu Street View': baiduCoverageLayer,
 }
 
@@ -284,12 +288,13 @@ function toggleMap(provider: string) {
   }
   else if (provider === 'bing') {
     resetLayer()
-    bingBaseLayer.addTo(map)
+    bingMapsLayer.addTo(map)
     bingStreetideLayer.addTo(map)
   }
   else if (provider === 'tencent') {
     resetLayer()
     tencentBaseLayer.addTo(map)
+    TencentCoverageLayer.addTo(map)
   }
   else if (provider === 'baidu') {
     resetLayer()
