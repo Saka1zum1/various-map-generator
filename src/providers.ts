@@ -35,6 +35,7 @@ function parseGoogle(data: any): google.maps.StreetViewPanoramaData {
         const linksRaw = data[1][0][5][0][3][0];
 
         const altitude = data[1][0][5][0][1][1][0]
+
         try {
             country = data[1][0][5][0][1][4];
             if (['TW', 'HK', 'MO'].includes(country)) {
@@ -63,7 +64,7 @@ function parseGoogle(data: any): google.maps.StreetViewPanoramaData {
             location: {
                 pano: panoId,
                 latLng: new google.maps.LatLng(lat, lng),
-                description: `${shortDesc_raw}, ${desc_raw}`,
+                description: !desc_raw && !shortDesc_raw ? null : `${shortDesc_raw}, ${desc_raw}`,
                 shortDescription: shortDesc_raw,
                 altitude: altitude,
                 country: country
@@ -129,7 +130,7 @@ async function getFromGoogle(
     ) => void,
 ) {
     const sv = getStreetViewService()
-    if ('pano' in request && typeof request.pano === 'string') {
+    if ('pano' in request && typeof request.pano === 'string' && request.pano.length == 27) {
         try {
             const result = await getMetadata(request.pano)
             if (result.length > 1) onCompleted(parseGoogle(result), google.maps.StreetViewStatus.OK)

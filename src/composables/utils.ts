@@ -84,7 +84,7 @@ export function createPayload(
 ): string {
   let payload: any;
   let pano_type: number = 2;
-  if (pano.slice(0, 4) == 'CIHM') pano_type = 10
+  if (pano.slice(0, 4) == 'CIHM' || pano.length!=27) pano_type = 10
   payload = [
     ["apiv3", null, null, null, "US", null, null, null, null, null, [[0]]],
     ["en", "US"],
