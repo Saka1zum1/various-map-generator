@@ -62,14 +62,13 @@ export function getCameraGeneration(pano: google.maps.StreetViewPanoramaData) {
     'AD', 'IM', 'JE', 'FR', 'DE', 'ES', 'PT', 'SJ']);
   const country = pano.location?.country ?? 'None'
   const targetDate = country in gen3Dates ? gen3Dates[country] : '9999-99'
-  const { lat, lng }: any = pano.location?.latLng
+  const lat: number = pano.location?.latLng?.lat() ?? 0
   const { worldSize } = pano.tiles
   switch (worldSize.height) {
     case 1664:
       return 1
     case 6656:
       if (country && pano.imageDate) {
-        console.log(country, pano.imageDate)
         if (pano.imageDate >= targetDate) {
           if (pano.location?.country != 'US') return 'badcam'
           if (pano.location?.country === 'US' && lat > 52) return 'badcam'
